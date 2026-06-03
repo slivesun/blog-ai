@@ -38,13 +38,22 @@ export function transformComment(apiComment: any): BlogComment {
 
 // 笔记数据转换
 export function transformNote(apiNote: any): SystemNote {
+  let tags: string[] = [];
+  if (apiNote.tags) {
+    if (typeof apiNote.tags === "string") {
+      tags = apiNote.tags.split(",").map((t: string) => t.trim()).filter((t: string) => t.length > 0);
+    } else if (Array.isArray(apiNote.tags)) {
+      tags = apiNote.tags;
+    }
+  }
+  
   return {
     id: String(apiNote.id),
     title: apiNote.title,
     category: apiNote.category || "General",
     content: apiNote.content,
     date: apiNote.created_at?.split("T")[0] || new Date().toISOString().split("T")[0],
-    tags: apiNote.tags || []
+    tags
   };
 }
 

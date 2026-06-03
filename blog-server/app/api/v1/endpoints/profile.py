@@ -53,16 +53,24 @@ async def update_profile(
     返回:
         DataResponse: 更新后的用户资料
     """
+    # 在当前会话中重新查询用户，避免会话不一致问题
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
     # 更新字段
     update_data = profile_data.model_dump(exclude_unset=True)
 
     for key, value in update_data.items():
-        setattr(current_user, key, value)
+        setattr(user, key, value)
 
     db.commit()
-    db.refresh(current_user)
+    db.refresh(user)
 
-    return DataResponse(data=UserResponse.model_validate(current_user))
+    return DataResponse(data=UserResponse.model_validate(user))
 
 
 @router.put("/password", response_model=DataResponse)
@@ -85,15 +93,23 @@ async def change_password(
     异常:
         HTTPException: 旧密码不正确
     """
+    # 在当前会话中重新查询用户，避免会话不一致问题
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
     # 验证旧密码
-    if not verify_password(password_data.old_password, current_user.hashed_password):
+    if not verify_password(password_data.old_password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect old password"
         )
 
     # 更新密码
-    current_user.hashed_password = get_password_hash(password_data.new_password)
+    user.hashed_password = get_password_hash(password_data.new_password)
     db.commit()
 
     return DataResponse(message="Password changed successfully")

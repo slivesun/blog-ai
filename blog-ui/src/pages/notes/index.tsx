@@ -58,7 +58,7 @@ export default function NotesView({
       setEditTitle(activeNote.title);
       setEditCategory(activeNote.category);
       setEditContent(activeNote.content);
-      setEditTagsInput(activeNote.tags.join(", "));
+      setEditTagsInput(Array.isArray(activeNote.tags) ? activeNote.tags.join(", ") : "");
       setSaveSuccess(false);
     } else {
       setEditTitle("");
@@ -320,7 +320,7 @@ export default function NotesView({
                     <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-900/40">
                       <span className="text-[9px] font-mono text-slate-600">{note.date}</span>
                       <div className="flex gap-1">
-                        {note.tags.slice(0, 2).map((tag) => (
+                        {Array.isArray(note.tags) && note.tags.slice(0, 2).map((tag) => (
                           <span key={tag} className="rounded bg-slate-950 px-1 py-0.5 text-[8px] font-mono text-slate-500">
                             #{tag}
                           </span>

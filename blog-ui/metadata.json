@@ -1,0 +1,6 @@
+{
+  "name": "PortalCore",
+  "description": "An atmospheric workspace and suite of high-utility developer tools, notes, and architectural writing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

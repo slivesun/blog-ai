@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 后端服务
+  backend:
+    build:
+      context: ./blog-server
+      dockerfile: Dockerfile
+    container_name: blog-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=sqlite:///./blog.db
+      - SECRET_KEY=${SECRET_KEY:-change-this-to-a-secure-random-string}
+      - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+    volumes:
+      - ./blog-server:/app
+      - backend-data:/app/data
+    networks:
+      - blog-network
+
+  # 前端服务 (开发模式)
+  frontend:
+    build:
+      context: ./blog-ui
+      dockerfile: Dockerfile.dev
+    container_name: blog-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api/v1
+    volumes:
+      - ./blog-ui:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - blog-network
+
+networks:
+  blog-network:
+    driver: bridge
+
+volumes:
+  backend-data:
