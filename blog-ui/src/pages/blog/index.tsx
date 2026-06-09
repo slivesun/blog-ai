@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { BlogArticle, BlogComment, ActivePath, SystemSettings, UserProfile } from "../../types";
 import { Heart, MessageSquare, ArrowLeft, Send, Sparkles, Plus, CheckCircle, ChevronRight, Share2, Loader2 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
@@ -37,6 +38,8 @@ export default function BlogView({
   onCreateComment,
 }: BlogViewProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const { id: urlArticleId } = useParams<{ id: string }>();
   const [commentText, setCommentText] = useState("");
   
   const [newTitle, setNewTitle] = useState("");
@@ -49,7 +52,7 @@ export default function BlogView({
   const [visibleCount, setVisibleCount] = useState(3);
   const [hasMore, setHasMore] = useState(true);
 
-  const activeArticle = articles.find((a) => a.id === selectedArticleId);
+  const activeArticle = articles.find((a) => a.id === (urlArticleId || selectedArticleId));
 
   const handleLike = async (articleId: string) => {
     if (onLikeArticle) {
@@ -123,7 +126,7 @@ export default function BlogView({
             setNewAbstract("");
             setNewContent("");
             setSubmitSuccess(false);
-            setPath("blog");
+            navigate("/blog");
           }, 1500);
         }
       } else {
@@ -159,7 +162,7 @@ export default function BlogView({
           setNewAbstract("");
           setNewContent("");
           setSubmitSuccess(false);
-          setPath("blog");
+          navigate("/blog");
         }, 1500);
       }
     } finally {
@@ -205,8 +208,8 @@ export default function BlogView({
         
         <button
           onClick={() => {
-            setPath("blog");
             setSelectedArticleId(null);
+            navigate("/blog");
           }}
           className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-slate-400 hover:text-white mb-8 cursor-pointer"
         >
@@ -230,7 +233,7 @@ export default function BlogView({
         </div>
 
         <div className="mb-8 pb-8 border-b border-slate-800">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight text-white mb-4 break-words">
             {activeArticle.title}
           </h1>
           
@@ -251,10 +254,10 @@ export default function BlogView({
           </div>
         </div>
 
-        <article className="prose prose-invert max-w-none text-slate-300 leading-relaxed font-sans space-y-6 font-light text-base mb-12">
+        <article className="prose prose-invert max-w-none text-slate-300 leading-relaxed font-sans space-y-6 font-light text-base mb-12 break-words">
           {activeArticle.content ? (
             activeArticle.content.split("\n\n").map((p, i) => (
-              <p key={i}>
+              <p key={i} className="break-words whitespace-pre-wrap">
                 {p}
               </p>
             ))
@@ -360,7 +363,7 @@ export default function BlogView({
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 animate-fade-in" id="blog-compose-view">
         
         <button
-          onClick={() => setPath("blog")}
+          onClick={() => navigate("/blog")}
           className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-slate-400 hover:text-white mb-8 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
@@ -433,7 +436,7 @@ export default function BlogView({
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
               <button
                 type="button"
-                onClick={() => setPath("blog")}
+                onClick={() => navigate("/blog")}
                 className="rounded-lg px-4 py-2 text-xs font-medium text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 cursor-pointer"
               >
                 {t.blog.draft}
@@ -478,7 +481,7 @@ export default function BlogView({
           </div>
 
           <button
-            onClick={() => setPath("blog-compose")}
+            onClick={() => navigate("/blog/compose")}
             className="flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-xs font-mono text-white transition-all hover:scale-[1.01] cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -499,7 +502,7 @@ export default function BlogView({
               key={art.id}
               onClick={() => {
                 setSelectedArticleId(art.id);
-                setPath("blog-detail");
+                navigate(`/blog/${art.id}`);
               }}
               className="group flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-900/15 p-5 hover:border-slate-700 hover:bg-slate-900/30 transition-all cursor-pointer"
             >
@@ -519,10 +522,10 @@ export default function BlogView({
                 </div>
 
                 <span className="font-mono text-[9px] text-slate-500">{art.date}</span>
-                <h3 className="text-lg font-heading font-semibold text-white mt-1 group-hover:text-blue-200 transition-colors">
+                <h3 className="text-lg font-heading font-semibold text-white mt-1 group-hover:text-blue-200 transition-colors line-clamp-2 break-words">
                   {art.title}
                 </h3>
-                <p className="text-xs text-slate-400 font-sans mt-2.5 font-light leading-relaxed">
+                <p className="text-xs text-slate-400 font-sans mt-2.5 font-light leading-relaxed line-clamp-2 break-words">
                   {art.abstract}
                 </p>
               </div>

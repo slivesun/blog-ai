@@ -2,44 +2,36 @@
 测试配置和夹具
 提供测试所需的数据库会话、客户端等
 """
+import os
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.main import app
-from app.db.session import Base, get_db
+from app.db.session import Base, get_db, engine as app_engine, SessionLocal
 from app.models.user import User
 from app.models.settings import UserSettings
 from app.core.security import get_password_hash
 
 
-# 创建测试数据库（内存SQLite）
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
 @pytest.fixture(scope="function")
 def db():
-    """创建测试数据库会话"""
+    """创建测试数据库会话 - 使用应用数据库"""
     # 创建表
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=app_engine)
 
-    db = TestingSessionLocal()
+    db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-        # 删除表
-        Base.metadata.drop_all(bind=engine)
+        # 清理测试数据（删除所有数据但保留表结构）
+        with app_engine.connect() as conn:
+            for table in reversed(Base.metadata.sorted_tables):
+                conn.execute(text(f"DELETE FROM {table.name}"))
+            conn.commit()
 
 
 @pytest.fixture(scope="function")

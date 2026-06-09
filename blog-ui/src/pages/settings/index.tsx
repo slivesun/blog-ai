@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { SystemSettings, ActivePath } from "../../types";
 import { Sliders, BellOff, MessageSquare, Palette, RefreshCcw, CheckCircle, Info, LayoutGrid, Loader2 } from "lucide-react";
 
@@ -120,10 +121,12 @@ export default function SettingsView({
     }
   };
 
+  const navigate = useNavigate();
+
   const handleReset = () => {
     onResetDefaults();
     triggerFeedback("System cache, worksheets, and layouts successfully restored.");
-    setTimeout(() => setPath("home"), 1200);
+    setTimeout(() => navigate("/"), 1200);
   };
 
   const paletteOptions = [

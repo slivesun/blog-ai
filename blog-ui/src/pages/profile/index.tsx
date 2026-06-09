@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { UserProfile, BlogArticle, ActivePath, SystemSettings } from "../../types";
-import { Edit3, Check, Github, Mail, FileText, Bookmark, Trash2, Globe, Eye, BookOpen, LogOut, Loader2 } from "lucide-react";
+import { Edit3, Check, Github, Mail, FileText, Bookmark, Trash2, Globe, Eye, EyeOff, BookOpen, LogOut, Loader2, AlertCircle, X } from "lucide-react";
 
 interface ProfileProps {
   profile: UserProfile;
@@ -46,8 +46,14 @@ export default function ProfileView({
   const [newBio, setNewBio] = useState(profile.bio);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  
+
   const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
+
+  // Auth states
+  const [showPassword, setShowPassword] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
   const [simulatedDrafts, setSimulatedDrafts] = useState<{ id: string; title: string; category: string; date: string }[]>([
     { id: "draft-1", title: "Review of Container Limits in Cloud sandboxes", category: "Systems", date: "June 03, 2024" },
@@ -122,8 +128,13 @@ export default function ProfileView({
     handleDeleteDraft(draft.id);
   };
 
-  // Filter articles published by this author
-  const userPublishedArticles = articles.filter((art) => art.author === profile.name || art.isUserPublished);
+  // Filter articles published by this author only (by userId match or name match)
+  const userPublishedArticles = articles.filter((art) => {
+    if (profile.id && art.authorId) {
+      return art.authorId === profile.id;
+    }
+    return art.author === profile.name;
+  });
 
   const themeAccentColors = {
     cyan: "bg-cyan-600 hover:bg-cyan-500",
@@ -146,37 +157,99 @@ export default function ProfileView({
     emerald: "text-emerald-400"
   };
 
-  // --- SIGN IN SCREEN SIMULATION (renders inside Profile path if user is logged out) ---
+  // --- SIGN IN / REGISTER SCREEN ---
   if (!isLoggedIn) {
     return (
       <div className="max-w-md mx-auto px-4 py-20 animate-fade-in" id="auth-view-card">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 sm:p-8 text-left shadow-xl relative">
-          
+
           <div className="text-center mb-8">
-            <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block mb-1">Authorization Gateway</span>
-            <h2 className="text-2xl font-bold font-heading text-white">Security Protocol Access</h2>
+            <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block mb-1">
+              {authMode === "login" ? "Authorization Gateway" : "Create Account"}
+            </span>
+            <h2 className="text-2xl font-bold font-heading text-white">
+              {authMode === "login" ? "Security Protocol Access" : "Register New User"}
+            </h2>
             <p className="text-xs text-slate-400 font-sans mt-1.5 leading-relaxed">
-              Verify credentials to personalize your system settings, publish layout documents, and comment on public streams.
+              {authMode === "login"
+                ? "Verify credentials to personalize your system settings, publish layout documents, and comment on public streams."
+                : "Create a new account to get started."}
             </p>
           </div>
+
+          {/* Error Message */}
+          {authError && (
+            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs text-red-300">{authError}</p>
+                {authError.includes("Incorrect username or password") && (
+                  <button
+                    onClick={() => {
+                      setAuthMode("register");
+                      setAuthError(null);
+                    }}
+                    className="text-xs text-indigo-400 hover:underline mt-1 cursor-pointer"
+                  >
+                    Don't have an account? Register now &rarr;
+                  </button>
+                )}
+              </div>
+              <button onClick={() => setAuthError(null)} className="text-slate-500 hover:text-slate-300 cursor-pointer">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {authSuccess && (
+            <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 flex items-start gap-2">
+              <Check className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-green-300 flex-1">{authSuccess}</p>
+              <button onClick={() => setAuthSuccess(null)} className="text-slate-500 hover:text-slate-300 cursor-pointer">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           <form onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
             const username = formData.get('username') as string;
             const password = formData.get('password') as string;
-            
+            const email = formData.get('email') as string;
+
+            setAuthError(null);
+            setAuthSuccess(null);
             setIsLoggingIn(true);
+
             try {
-              if (onLogin) {
-                const result = await onLogin(username, password);
-                if (result.success) {
+              if (authMode === "login") {
+                if (onLogin) {
+                  const result = await onLogin(username, password);
+                  if (result.success) {
+                    setPath("profile");
+                  } else {
+                    setAuthError(result.error || "Login failed");
+                  }
+                } else {
+                  setIsLoggedIn(true);
                   setPath("profile");
                 }
               } else {
-                setIsLoggedIn(true);
-                setPath("profile");
+                // Register mode
+                if (onRegister) {
+                  const result = await onRegister(username, email || `${username}@example.com`, password);
+                  if (result.success) {
+                    setAuthSuccess("Registration successful! You are now logged in.");
+                    setPath("profile");
+                  } else {
+                    setAuthError(result.error || "Registration failed");
+                  }
+                }
               }
+            } catch (error: any) {
+              setAuthError(error?.message || "An unexpected error occurred");
             } finally {
               setIsLoggingIn(false);
             }
@@ -189,24 +262,38 @@ export default function ProfileView({
                 required
                 className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
                 placeholder="Enter username"
-                defaultValue="admin"
               />
             </div>
-            
+
+            {authMode === "register" && (
+              <div>
+                <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
+                  placeholder="Enter email (optional)"
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">Password</label>
-              <div className="space-y-2">
+              <div className="relative">
                 <input
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
-                  className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700 font-mono tracking-widest"
+                  className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 pr-10 text-white focus:outline-none focus:border-slate-700 font-mono tracking-widest"
                   placeholder="••••••••••••"
-                  defaultValue="admin123"
                 />
-                <span className="block text-[9px] font-mono text-slate-500 leading-normal pl-1">
-                  * Default credentials: admin / admin123
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
@@ -218,25 +305,39 @@ export default function ProfileView({
               {isLoggingIn ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Authenticating...
+                  {authMode === "login" ? "Authenticating..." : "Creating Account..."}
                 </>
               ) : (
-                'Sign-In and Mount Workspace'
+                authMode === "login" ? "Sign-In and Mount Workspace" : "Create Account"
               )}
             </button>
           </form>
 
-          {/* Preset Bypass for demo */}
+          {/* Toggle between login and register */}
           <div className="mt-6 pt-4 border-t border-slate-800 text-center">
-            <button
-              onClick={() => {
-                setIsLoggedIn(true);
-                setPath("profile");
-              }}
-              className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
-            >
-              Continue as Guest (Demo Mode) &rarr;
-            </button>
+            {authMode === "login" ? (
+              <button
+                onClick={() => {
+                  setAuthMode("register");
+                  setAuthError(null);
+                  setAuthSuccess(null);
+                }}
+                className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
+              >
+                Don't have an account? Register &rarr;
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setAuthMode("login");
+                  setAuthError(null);
+                  setAuthSuccess(null);
+                }}
+                className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
+              >
+                &larr; Back to Login
+              </button>
+            )}
           </div>
 
         </div>
@@ -409,7 +510,7 @@ export default function ProfileView({
                   }}
                 >
                   <span className="text-[10px] font-mono text-slate-500">{art.date}</span>
-                  <h3 className="text-base font-semibold text-white tracking-tight group-hover:text-cyan-200 mt-0.5">
+                  <h3 className="text-base font-semibold text-white tracking-tight group-hover:text-cyan-200 mt-0.5 line-clamp-2">
                     {art.title}
                   </h3>
                   <p className="text-xs text-slate-400 font-sans mt-1 leading-normal font-light">

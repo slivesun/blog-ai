@@ -1,4 +1,5 @@
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ActivePath, UserProfile, AppNotification, SystemSettings } from "../types";
 import { Terminal, Bell, Settings, LogIn, Compass, FileText, ToggleLeft, ToggleRight, LayoutGrid, Globe } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
@@ -27,18 +28,19 @@ export default function Header({
   setPrototypeMode,
 }: HeaderProps) {
   const { language, setLanguage, t } = useLanguage();
+  const navigate = useNavigate();
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    setPath("home");
+    navigate("/");
   };
 
-  const navItems: { path: ActivePath; label: string; icon: React.ReactNode }[] = [
-    { path: "home", label: t.header.overview, icon: <Compass className="w-4 h-4" /> },
-    { path: "blog", label: t.header.blog, icon: <FileText className="w-4 h-4" /> },
-    { path: "dev-tools", label: t.header.devTools, icon: <Terminal className="w-4 h-4" /> },
-    { path: "notes", label: t.header.notes, icon: <LayoutGrid className="w-4 h-4" /> },
+  const navItems: { path: ActivePath; route: string; label: string; icon: React.ReactNode }[] = [
+    { path: "home", route: "/", label: t.header.overview, icon: <Compass className="w-4 h-4" /> },
+    { path: "blog", route: "/blog", label: t.header.blog, icon: <FileText className="w-4 h-4" /> },
+    { path: "dev-tools", route: "/dev-tools", label: t.header.devTools, icon: <Terminal className="w-4 h-4" /> },
+    { path: "notes", route: "/notes", label: t.header.notes, icon: <LayoutGrid className="w-4 h-4" /> },
   ];
 
   const accentClasses = {
@@ -67,9 +69,9 @@ export default function Header({
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         <div className="flex items-center gap-8">
-          <button
+          <Link
             id="header-nav-logo"
-            onClick={() => setPath("home")}
+            to="/"
             className="flex items-center gap-2.5 transition-transform hover:scale-[1.02] text-left"
           >
             <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700">
@@ -80,16 +82,16 @@ export default function Header({
               <span className="font-heading text-lg font-bold tracking-tight text-white">PortalCore</span>
               <p className="text-[9px] font-mono tracking-widest text-slate-500 uppercase">Precision.Arch</p>
             </div>
-          </button>
+          </Link>
 
           <nav className="hidden md:flex items-center gap-1.5" id="header-nav-links">
             {navItems.map((item) => {
-              const isActive = currentPath === item.path || (item.path === "blog" && currentPath === "blog-detail");
+              const isActive = currentPath === item.path || (item.path === "blog" && (currentPath === "blog-detail" || currentPath === "blog-compose"));
               return (
-                <button
+                <Link
                   key={item.path}
                   id={`header-nav-link-${item.path}`}
-                  onClick={() => setPath(item.path)}
+                  to={item.route}
                   className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
                     isActive
                       ? activeAccentBg[settings.themeAccent]
@@ -98,7 +100,7 @@ export default function Header({
                 >
                   {item.icon}
                   {item.label}
-                </button>
+                </Link>
               );
             })}
           </nav>
@@ -142,9 +144,9 @@ export default function Header({
           {isLoggedIn ? (
             <div className="flex items-center gap-2.5 sm:gap-3.5">
               
-              <button
+              <Link
                 id="header-notifications-btn"
-                onClick={() => setPath("notifications")}
+                to="/notifications"
                 className={`relative rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white ${
                   currentPath === "notifications" ? "bg-slate-800 text-white" : ""
                 }`}
@@ -155,25 +157,25 @@ export default function Header({
                     {unreadCount}
                   </span>
                 )}
-              </button>
+              </Link>
 
-              <button
+              <Link
                 id="header-settings-btn"
-                onClick={() => setPath("settings")}
+                to="/settings"
                 className={`rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white ${
                   currentPath === "settings" ? "bg-slate-800 text-white" : ""
                 }`}
                 title={t.header.systemSettings}
               >
                 <Settings className="h-5 w-5" />
-              </button>
+              </Link>
 
-              <button
+              <Link
                 id="header-profile-btn"
-                onClick={() => setPath("profile")}
+                to="/profile"
                 className={`flex items-center gap-2 rounded-full border p-0.5 transition-all outline-none ${
-                  currentPath === "profile" 
-                    ? `border-${settings.themeAccent}-500/60 ring-2 ring-${settings.themeAccent}-500/10` 
+                  currentPath === "profile"
+                    ? `border-${settings.themeAccent}-500/60 ring-2 ring-${settings.themeAccent}-500/10`
                     : "border-slate-800 hover:border-slate-600"
                 }`}
               >
@@ -183,7 +185,7 @@ export default function Header({
                   className="h-8.5 w-8.5 rounded-full object-cover"
                   referrerPolicy="no-referrer"
                 />
-              </button>
+              </Link>
 
               <button
                 id="header-logout-btn"
@@ -194,25 +196,25 @@ export default function Header({
               </button>
             </div>
           ) : (
-            <button
+            <Link
               id="header-login-btn"
-              onClick={() => setPath("profile")}
+              to="/profile"
               className={`flex items-center gap-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 text-sm font-medium text-white transition-all hover:scale-[1.01]`}
             >
               <LogIn className="w-4 h-4" />
               {t.header.authenticate}
-            </button>
+            </Link>
           )}
         </div>
       </div>
 
       <div className="md:hidden border-t border-slate-800 bg-slate-950/60 flex items-center justify-around px-2 py-1.5">
         {navItems.map((item) => {
-          const isActive = currentPath === item.path || (item.path === "blog" && currentPath === "blog-detail");
+          const isActive = currentPath === item.path || (item.path === "blog" && (currentPath === "blog-detail" || currentPath === "blog-compose"));
           return (
-            <button
+            <Link
               key={item.path}
-              onClick={() => setPath(item.path)}
+              to={item.route}
               className={`flex flex-col items-center gap-0.5 rounded-md px-3 py-1 text-[10px] font-mono transition-colors ${
                 isActive
                   ? activeAccentText[settings.themeAccent]
@@ -221,7 +223,7 @@ export default function Header({
             >
               {item.icon}
               <span>{item.label.split(" ")[0]}</span>
-            </button>
+            </Link>
           );
         })}
       </div>

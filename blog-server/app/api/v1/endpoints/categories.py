@@ -11,7 +11,7 @@ from app.models.user import User
 from app.models.article import Category
 from app.schemas.article import CategoryCreate, CategoryUpdate, CategoryResponse
 from app.schemas.common import DataResponse
-from app.core.dependencies import get_current_active_user
+from app.core.dependencies import require_admin
 from app.utils.slug import slugify
 
 
@@ -70,7 +70,7 @@ async def get_category(
 @router.post("", response_model=DataResponse[CategoryResponse], status_code=status.HTTP_201_CREATED)
 async def create_category(
     category_data: CategoryCreate,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_admin)],
     db: Session = Depends(get_db)
 ):
     """
@@ -122,7 +122,7 @@ async def create_category(
 async def update_category(
     category_id: int,
     category_data: CategoryUpdate,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_admin)],
     db: Session = Depends(get_db)
 ):
     """
@@ -175,7 +175,7 @@ async def update_category(
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category(
     category_id: int,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_admin)],
     db: Session = Depends(get_db)
 ):
     """
@@ -189,12 +189,6 @@ async def delete_category(
     异常:
         HTTPException: 分类不存在或无权限
     """
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin privileges required"
-        )
-
     category = db.query(Category).filter(Category.id == category_id).first()
 
     if not category:

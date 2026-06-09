@@ -41,10 +41,10 @@ async def get_notes(
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
     category: Optional[str] = Query(None, description="分类筛选"),
     search: Optional[str] = Query(None, description="搜索关键词"),
-    current_user: Optional[User] = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
-    获取笔记列表
+    获取当前用户的笔记列表
 
     参数:
         db: 数据库会话
@@ -52,12 +52,13 @@ async def get_notes(
         page_size: 每页数量
         category: 分类筛选
         search: 搜索关键词
-        current_user: 当前用户（可选）
+        current_user: 当前认证用户
 
     返回:
         DataResponse: 笔记列表
     """
-    query = db.query(Note)
+    # 只查询当前用户的笔记
+    query = db.query(Note).filter(Note.author_id == current_user.id)
 
     # 分类筛选
     if category:

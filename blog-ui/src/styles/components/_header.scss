@@ -1,0 +1,242 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  width: 100%;
+  border-bottom: 1px solid $slate-800;
+  @include glass-effect;
+
+  &__container {
+    margin: 0 auto;
+    display: flex;
+    height: 4rem;
+    max-width: 80rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    @media (min-width: 640px) { padding: 0 1.5rem; }
+    @media (min-width: 1024px) { padding: 0 2rem; }
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    transition: transform $transition-fast;
+    text-decoration: none;
+    &:hover { transform: scale(1.02); }
+  }
+
+  &__logo-icon {
+    position: relative;
+    display: flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: $radius-lg;
+    background: linear-gradient(to bottom right, $slate-800, $slate-900);
+    border: 1px solid $slate-700;
+  }
+
+  &__logo-ring {
+    position: absolute;
+    inset: 6px;
+    border-radius: 2px;
+    border: 2px dashed;
+    border-color: rgba($cyan-500, 0.4);
+  }
+
+  &__logo-dot {
+    height: 0.625rem;
+    width: 0.625rem;
+    border-radius: 9999px;
+    background-color: $cyan-400;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  &__logo-text {
+    font-family: $font-heading;
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: white;
+  }
+
+  &__logo-sub {
+    font-size: 0.5625rem;
+    font-family: $font-mono;
+    letter-spacing: 0.1em;
+    color: $slate-500;
+    text-transform: uppercase;
+  }
+
+  &__nav {
+    display: none;
+    align-items: center;
+    gap: 0.375rem;
+    @media (min-width: 768px) { display: flex; }
+  }
+
+  &__nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: $radius-lg;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $slate-400;
+    text-decoration: none;
+    transition: all $transition-fast;
+    &:hover {
+      background-color: rgba($slate-800, 0.5);
+      color: white;
+    }
+    &--active {
+      background-color: rgba($cyan-500, 0.1);
+      color: $cyan-400;
+      border: 1px solid rgba($cyan-500, 0.2);
+    }
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__icon-btn {
+    position: relative;
+    border-radius: $radius-lg;
+    padding: 0.5rem;
+    color: $slate-400;
+    text-decoration: none;
+    transition: all $transition-fast;
+    &:hover {
+      background-color: $slate-800;
+      color: white;
+    }
+    &--active {
+      background-color: $slate-800;
+      color: white;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    display: flex;
+    height: 1rem;
+    min-width: 16px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background-color: $red-500;
+    padding: 0 0.25rem;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    color: white;
+    box-shadow: $shadow-md;
+  }
+
+  &__avatar-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    border: 1px solid $slate-800;
+    padding: 2px;
+    transition: all $transition-fast;
+    text-decoration: none;
+    outline: none;
+    &:hover { border-color: $slate-600; }
+  }
+
+  &__avatar {
+    height: 2.125rem;
+    width: 2.125rem;
+    border-radius: 9999px;
+    object-fit: cover;
+  }
+
+  &__logout-btn {
+    display: none;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: $radius-lg;
+    border: 1px solid $slate-800;
+    background-color: $slate-950;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    color: $slate-400;
+    font-family: $font-mono;
+    cursor: pointer;
+    transition: all $transition-fast;
+    &:hover {
+      border-color: $slate-700;
+      color: white;
+    }
+    @media (min-width: 1024px) { display: inline-flex; }
+  }
+
+  &__login-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: $radius-lg;
+    background-color: $slate-800;
+    border: 1px solid $slate-700;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    text-decoration: none;
+    transition: all $transition-fast;
+    &:hover {
+      background-color: $slate-700;
+      transform: scale(1.01);
+    }
+  }
+
+  &__mobile-nav {
+    display: flex;
+    border-top: 1px solid $slate-800;
+    background-color: rgba($slate-950, 0.6);
+    align-items: center;
+    justify-content: space-around;
+    padding: 0.375rem 0.5rem;
+    @media (min-width: 768px) { display: none; }
+  }
+
+  &__mobile-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+    border-radius: $radius-md;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.625rem;
+    font-family: $font-mono;
+    color: $slate-500;
+    text-decoration: none;
+    transition: color $transition-fast;
+    &:hover { color: $slate-300; }
+    &--active { color: $cyan-400; }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

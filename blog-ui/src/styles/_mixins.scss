@@ -1,0 +1,118 @@
+// ============================
+// Mixins
+// ============================
+@use 'variables' as *;
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin card-base {
+  border-radius: $radius-2xl;
+  border: 1px solid $slate-800;
+  background-color: rgba($slate-900, 0.1);
+}
+
+@mixin card-hover {
+  transition: all $transition-slow;
+  &:hover {
+    border-color: $slate-700;
+    background-color: rgba($slate-900, 0.4);
+    transform: translateY(-4px);
+  }
+}
+
+@mixin input-base {
+  width: 100%;
+  font-size: 0.75rem;
+  border-radius: $radius-xl;
+  background-color: $slate-950;
+  border: 1px solid $slate-850;
+  padding: 0.75rem 1rem;
+  color: white;
+  outline: none;
+  transition: border-color $transition-fast;
+  &:focus {
+    border-color: $slate-700;
+  }
+}
+
+@mixin btn-primary($accent: cyan) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: $radius-lg;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all $transition-fast;
+}
+
+@mixin btn-ghost {
+  background-color: $slate-800;
+  color: white;
+  border-radius: $radius-lg;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-family: $font-mono;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+  &:hover {
+    background-color: $slate-700;
+  }
+}
+
+@mixin badge($bg, $text) {
+  display: inline-flex;
+  align-items: center;
+  border-radius: $radius-md;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-family: $font-mono;
+  font-weight: 700;
+  background-color: $bg;
+  color: $text;
+}
+
+@mixin scrollbar-thin {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $slate-700;
+    border-radius: 2px;
+  }
+}
+
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@mixin animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@mixin animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+@mixin glass-effect {
+  background-color: rgba($slate-900, 0.9);
+  backdrop-filter: blur(12px);
+}

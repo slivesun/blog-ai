@@ -63,7 +63,8 @@ async def lifespan(app: FastAPI):
     logger.info("Database initialized")
 
     # 创建默认管理员账号（如果不存在）
-    await create_default_admin()
+    if settings.is_development and settings.CREATE_DEFAULT_ADMIN:
+        await create_default_admin()
 
     yield
 

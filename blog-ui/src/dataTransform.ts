@@ -13,9 +13,10 @@ export function transformArticle(apiArticle: any): BlogArticle {
     abstract: apiArticle.abstract || "",
     content: apiArticle.content,
     category: apiArticle.category?.name || apiArticle.category || "General",
-    author: apiArticle.author?.username || apiArticle.author || "Anonymous",
-    authorRole: apiArticle.author?.role || "Contributor",
-    authorAvatar: apiArticle.author?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop",
+    author: apiArticle.author_name || apiArticle.author?.username || apiArticle.author || "Anonymous",
+    authorId: apiArticle.author_id || apiArticle.author?.id,
+    authorRole: apiArticle.author_role || apiArticle.author?.role || "Contributor",
+    authorAvatar: apiArticle.author_avatar || apiArticle.author?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop",
     date: formatDate(apiArticle.created_at || apiArticle.updated_at),
     coverImage: apiArticle.cover_image || "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop",
     likes: apiArticle.likes || 0,
@@ -73,6 +74,7 @@ export function transformNotification(apiNotif: any): AppNotification {
 // 用户资料转换
 export function transformProfile(apiProfile: any): UserProfile {
   return {
+    id: apiProfile.id,
     name: apiProfile.full_name || apiProfile.username || "User",
     role: apiProfile.role || "Contributor",
     bio: apiProfile.bio || "",

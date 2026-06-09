@@ -18,6 +18,7 @@ export interface BlogArticle {
   content?: string;
   category: "Engineering" | "Design" | "Security" | "Systems" | string;
   author: string;
+  authorId?: number;
   authorRole: string;
   authorAvatar?: string;
   date: string;
@@ -48,6 +49,7 @@ export interface AppNotification {
 }
 
 export interface UserProfile {
+  id?: number;
   name: string;
   role: string;
   bio: string;

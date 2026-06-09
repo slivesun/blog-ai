@@ -1,0 +1,215 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.settings {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2.5rem 1rem;
+  @include animate-fade-in;
+  @media (min-width: 640px) { padding: 4rem 1.5rem; }
+  @media (min-width: 1024px) { padding: 4rem 2rem; }
+
+  &__header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid $slate-800;
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-size: 1.875rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: $slate-400;
+    font-weight: 300;
+  }
+
+  &__success {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: $radius-lg;
+    background-color: rgba($green-400, 0.1);
+    border: 1px solid rgba($green-400, 0.2);
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    font-family: $font-mono;
+    color: $green-400;
+    animation: pulse 2s infinite;
+  }
+
+  &__section {
+    margin-bottom: 2rem;
+  }
+
+  &__section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  &__section-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: $slate-400;
+  }
+
+  &__section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: $radius-xl;
+    border: 1px solid $slate-800;
+    margin-bottom: 0.75rem;
+    transition: border-color $transition-fast;
+    &:hover { border-color: $slate-750; }
+  }
+
+  &__option-info {
+    flex: 1;
+  }
+
+  &__option-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    margin-bottom: 0.25rem;
+  }
+
+  &__option-desc {
+    font-size: 0.75rem;
+    color: $slate-400;
+    font-weight: 300;
+  }
+
+  &__toggle {
+    position: relative;
+    width: 2.75rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background-color $transition-fast;
+    flex-shrink: 0;
+    border: none;
+
+    &--off {
+      background-color: $slate-700;
+    }
+    &--on {
+      background-color: $cyan-500;
+    }
+  }
+
+  &__toggle-knob {
+    position: absolute;
+    top: 2px;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background-color: white;
+    transition: transform $transition-fast;
+    &--left { left: 2px; }
+    &--right { transform: translateX(1.25rem); }
+  }
+
+  &__themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  &__theme-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: $radius-lg;
+    cursor: pointer;
+    transition: all $transition-fast;
+    border: 2px solid transparent;
+    position: relative;
+
+    &--active {
+      border-color: white;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    }
+
+    &--cyan { background-color: $cyan-500; }
+    &--violet { background-color: $violet-500; }
+    &--amber { background-color: $amber-500; }
+    &--emerald { background-color: $emerald-500; }
+  }
+
+  &__theme-check {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  &__danger {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid $slate-800;
+  }
+
+  &__danger-label {
+    font-size: 0.625rem;
+    font-family: $font-mono;
+    letter-spacing: 0.1em;
+    color: $red-400;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  &__reset-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: $radius-lg;
+    border: 1px solid rgba($red-500, 0.3);
+    background-color: rgba(127, 29, 29, 0.2);
+    color: $red-400;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-family: $font-mono;
+    cursor: pointer;
+    transition: all $transition-fast;
+    &:hover {
+      background-color: rgba(127, 29, 29, 0.4);
+      border-color: rgba($red-500, 0.5);
+    }
+  }
+
+  &__back {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: $slate-500;
+    font-size: 0.75rem;
+    font-family: $font-mono;
+    margin-top: 2rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    transition: color $transition-fast;
+    &:hover { color: white; }
+  }
+}

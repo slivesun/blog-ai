@@ -11,7 +11,7 @@ from app.models.user import User
 from app.models.article import Tag
 from app.schemas.article import TagCreate, TagResponse
 from app.schemas.common import DataResponse
-from app.core.dependencies import get_current_active_user
+from app.core.dependencies import require_admin
 from app.utils.slug import slugify
 
 
@@ -41,7 +41,7 @@ async def get_tags(
 @router.post("", response_model=DataResponse[TagResponse], status_code=status.HTTP_201_CREATED)
 async def create_tag(
     tag_data: TagCreate,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_admin)],
     db: Session = Depends(get_db)
 ):
     """
@@ -87,7 +87,7 @@ async def create_tag(
 @router.delete("/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_tag(
     tag_id: int,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(require_admin)],
     db: Session = Depends(get_db)
 ):
     """

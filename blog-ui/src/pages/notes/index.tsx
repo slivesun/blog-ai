@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { SystemNote, SystemSettings } from "../../types";
-import { INITIAL_NOTES } from "../../utils";
 import { useLanguage } from "../../context/LanguageContext";
 import {
   FileText,
@@ -313,7 +312,7 @@ export default function NotesView({
                       </button>
                     </div>
 
-                    <h3 className="text-xs font-semibold text-white tracking-tight leading-tight group-hover:text-white mb-2">
+                    <h3 className="text-xs font-semibold text-white tracking-tight leading-tight group-hover:text-white mb-2 line-clamp-2">
                       {note.title}
                     </h3>
 

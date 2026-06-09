@@ -1,0 +1,274 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.blog {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2.5rem 1rem;
+  @include animate-fade-in;
+  @media (min-width: 640px) { padding: 4rem 1.5rem; }
+  @media (min-width: 1024px) { padding: 4rem 2rem; }
+
+  &__header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid $slate-800;
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-size: 1.875rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: $slate-400;
+    font-weight: 300;
+    max-width: 48rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    @media (min-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+    @media (min-width: 1024px) { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  &__card {
+    position: relative;
+    border-radius: $radius-2xl;
+    border: 1px solid $slate-800;
+    background-color: rgba($slate-900, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all $transition-slow;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+
+    &:hover {
+      border-color: $slate-700;
+      background-color: rgba($slate-900, 0.4);
+      transform: translateY(-4px);
+    }
+  }
+
+  &__card-image {
+    width: 100%;
+    height: 12rem;
+    object-fit: cover;
+    border-bottom: 1px solid $slate-800;
+  }
+
+  &__card-body {
+    padding: 1.25rem 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  &__card-category {
+    border-radius: $radius-md;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.5625rem;
+    font-family: $font-mono;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background-color: $slate-800;
+    color: $slate-300;
+  }
+
+  &__card-date {
+    font-family: $font-mono;
+    font-size: 0.5625rem;
+    color: $slate-500;
+  }
+
+  &__card-title {
+    font-size: 1.125rem;
+    font-family: $font-heading;
+    font-weight: 600;
+    color: white;
+    margin-top: 0.25rem;
+    transition: color $transition-fast;
+    @include line-clamp(2);
+    .blog__card:hover & { color: #93c5fd; }
+  }
+
+  &__card-abstract {
+    font-size: 0.75rem;
+    color: $slate-400;
+    font-weight: 300;
+    line-height: 1.625;
+    margin-top: 0.625rem;
+  }
+
+  &__card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba($slate-850, 0.6);
+    padding-top: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  &__card-author {
+    font-size: 0.6875rem;
+    color: $slate-400;
+    font-weight: 500;
+  }
+
+  &__card-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.625rem;
+    font-family: $font-mono;
+    color: $slate-500;
+  }
+
+  &__card-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  // Detail view
+  &__detail {
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 2rem 0;
+  }
+
+  &__detail-image {
+    width: 100%;
+    max-height: 24rem;
+    object-fit: cover;
+    border-radius: $radius-2xl;
+    border: 1px solid $slate-800;
+    margin-bottom: 2rem;
+  }
+
+  &__detail-title {
+    font-family: $font-heading;
+    font-size: 1.875rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: white;
+    margin-bottom: 1rem;
+    @media (min-width: 640px) { font-size: 2.25rem; }
+    @media (min-width: 1024px) { font-size: 3rem; }
+  }
+
+  &__detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: $slate-400;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid $slate-800;
+  }
+
+  &__detail-content {
+    font-size: 0.875rem;
+    color: $slate-300;
+    line-height: 1.75;
+    font-weight: 300;
+  }
+
+  &__back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: $slate-400;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    transition: color $transition-fast;
+    background: none;
+    border: none;
+    padding: 0;
+    &:hover { color: white; }
+  }
+
+  // Compose
+  &__compose {
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 2rem 0;
+  }
+
+  &__compose-title {
+    font-family: $font-heading;
+    font-size: 1.875rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+
+  &__compose-subtitle {
+    font-size: 0.875rem;
+    color: $slate-400;
+    margin-bottom: 2rem;
+  }
+
+  &__compose-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  &__compose-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__compose-label {
+    font-size: 0.75rem;
+    font-family: $font-mono;
+    color: $slate-400;
+    text-transform: uppercase;
+  }
+
+  &__compose-input {
+    @include input-base;
+  }
+
+  &__compose-textarea {
+    width: 100%;
+    border-radius: $radius-xl;
+    background-color: $slate-950;
+    border: 1px solid $slate-800;
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: white;
+    outline: none;
+    line-height: 1.75;
+    resize: vertical;
+    &:focus { border-color: $slate-700; }
+  }
+
+  &__compose-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+}

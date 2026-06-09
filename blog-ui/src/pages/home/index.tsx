@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { ActivePath, SystemSettings } from "../../types";
 import { FileText, Terminal, LayoutGrid, ArrowRight, Share2, CornerRightDown, Laptop, Globe, ShieldAlert } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
@@ -11,6 +12,12 @@ interface HomeViewProps {
 
 export default function HomeView({ setPath, settings, prototypeMode }: HomeViewProps) {
   const { t } = useLanguage();
+
+  const routeMap: Record<string, string> = {
+    "blog": "/blog",
+    "dev-tools": "/dev-tools",
+    "notes": "/notes",
+  };
 
   const accentTextColors = {
     cyan: "text-cyan-400 group-hover:text-cyan-300",
@@ -87,13 +94,13 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
         {cards.map((card) => {
           const isTargeted = prototypeMode;
           return (
-            <div
+            <Link
               key={card.id}
               id={`home-card-${card.id}`}
-              onClick={() => setPath(card.path)}
+              to={routeMap[card.id] || "/"}
               className={`group relative flex flex-col justify-between rounded-2xl border ${
-                isTargeted 
-                  ? "border-indigo-500 bg-slate-900/40 shadow-[0_0_15px_rgba(99,102,241,0.15)] ring-2 ring-indigo-500/20" 
+                isTargeted
+                  ? "border-indigo-500 bg-slate-900/40 shadow-[0_0_15px_rgba(99,102,241,0.15)] ring-2 ring-indigo-500/20"
                   : "border-slate-800 bg-slate-900/20 hover:border-slate-700 hover:bg-slate-900/40"
               } p-6 sm:p-8 transition-all duration-300 hover:translate-y-[-4px] cursor-pointer`}
             >
@@ -123,7 +130,7 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 </span>
                 <ArrowRight className={`w-4 h-4 transition-transform group-hover:translate-x-1.5 ${accentTextColors[settings.themeAccent]}`} />
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
@@ -153,12 +160,12 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 <span className="text-[10px] font-mono text-slate-500">ROOT // ENTRY</span>
                 <h5 className="text-sm font-semibold text-white mt-1">{t.home.journeyMap.entry.title}</h5>
                 <p className="text-[11px] text-slate-400 mt-1">{t.home.journeyMap.entry.desc}</p>
-                <button
-                  onClick={() => setPath("home")}
+                <Link
+                  to="/"
                   className="mt-3 text-xs text-indigo-400 font-mono flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   {t.home.journeyMap.entry.jump}
-                </button>
+                </Link>
               </div>
 
               <div className="rounded-xl border border-slate-800 bg-slate-900/30 p-4 relative group hover:border-indigo-400/50 transition-all">
@@ -166,12 +173,12 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 <span className="text-[10px] font-mono text-slate-500">CLUSTER // BLOG_MESH</span>
                 <h5 className="text-sm font-semibold text-white mt-1">{t.home.journeyMap.blog.title}</h5>
                 <p className="text-[11px] text-slate-400 mt-1">{t.home.journeyMap.blog.desc}</p>
-                <button
-                  onClick={() => setPath("blog")}
+                <Link
+                  to="/blog"
                   className="mt-3 text-xs text-indigo-400 font-mono flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   {t.home.journeyMap.blog.jump}
-                </button>
+                </Link>
               </div>
 
               <div className="rounded-xl border border-slate-800 bg-slate-900/30 p-4 relative group hover:border-indigo-400/50 transition-all">
@@ -179,12 +186,12 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 <span className="text-[10px] font-mono text-slate-500">CLUSTER // DEV_UTILITIES</span>
                 <h5 className="text-sm font-semibold text-white mt-1">{t.home.journeyMap.dev.title}</h5>
                 <p className="text-[11px] text-slate-400 mt-1">{t.home.journeyMap.dev.desc}</p>
-                <button
-                  onClick={() => setPath("dev-tools")}
+                <Link
+                  to="/dev-tools"
                   className="mt-3 text-xs text-indigo-400 font-mono flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   {t.home.journeyMap.dev.jump}
-                </button>
+                </Link>
               </div>
 
               <div className="rounded-xl border border-slate-800 bg-slate-900/30 p-4 relative group hover:border-indigo-400/50 transition-all">
@@ -192,12 +199,12 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 <span className="text-[10px] font-mono text-slate-500">CLUSTER // MARKS_CANVAS</span>
                 <h5 className="text-sm font-semibold text-white mt-1">{t.home.journeyMap.notes.title}</h5>
                 <p className="text-[11px] text-slate-400 mt-1">{t.home.journeyMap.notes.desc}</p>
-                <button
-                  onClick={() => setPath("notes")}
+                <Link
+                  to="/notes"
                   className="mt-3 text-xs text-indigo-400 font-mono flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   {t.home.journeyMap.notes.jump}
-                </button>
+                </Link>
               </div>
 
             </div>
