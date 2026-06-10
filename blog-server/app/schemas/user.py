@@ -10,6 +10,7 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict
 class UserBase(BaseModel):
     """用户基础模式"""
     username: str = Field(..., min_length=3, max_length=50, description="用户名")
+    nickname: Optional[str] = Field(None, max_length=100, description="昵称")
     email: EmailStr = Field(..., description="邮箱地址")
     full_name: Optional[str] = Field(None, max_length=100, description="真实姓名")
     bio: Optional[str] = Field(None, description="个人简介")
@@ -24,6 +25,7 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     """用户更新模式"""
+    nickname: Optional[str] = Field(None, max_length=100, description="昵称")
     full_name: Optional[str] = Field(None, max_length=100, description="真实姓名")
     bio: Optional[str] = Field(None, description="个人简介")
     avatar_url: Optional[str] = Field(None, max_length=500, description="头像URL")
@@ -54,6 +56,7 @@ class UserBriefResponse(BaseModel):
 
     id: int
     username: str
+    nickname: Optional[str] = None
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
     role: str

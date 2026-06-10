@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.article import Article
 from app.models.comment import Comment
+from app.models.notification import Notification
 from app.schemas.article import CommentCreate, CommentUpdate, CommentResponse
 from app.schemas.common import DataResponse, PaginatedResponse
 from app.core.dependencies import get_current_user, get_current_active_user
@@ -29,7 +30,8 @@ def build_comment_response(comment: Comment, include_replies: bool = False) -> C
         content=comment.content,
         article_id=comment.article_id,
         author_id=comment.author_id,
-        author_name=comment.author.username if comment.author else "Unknown",
+        author_name=(comment.author.nickname or comment.author.username) if comment.author else "Unknown",
+        author_nickname=comment.author.nickname if comment.author else None,
         author_avatar=comment.author.avatar_url if comment.author else None,
         parent_id=comment.parent_id,
         is_deleted=comment.is_deleted,
@@ -129,6 +131,19 @@ async def create_comment(
     db.add(comment)
     db.commit()
     db.refresh(comment)
+
+    # 创建通知给文章作者（如果评论者不是作者本人）
+    if current_user.id != article.author_id:
+        commenter_name = current_user.nickname or current_user.username
+        notification = Notification(
+            user_id=article.author_id,
+            title=f"{commenter_name} 评论了你的文章",
+            description=f"你的文章「{article.title}」收到了一条新评论: {comment_data.content[:50]}",
+            notification_type="interaction",
+            link_to_id=str(article.id)
+        )
+        db.add(notification)
+        db.commit()
 
     return DataResponse(data=build_comment_response(comment))
 

@@ -149,7 +149,7 @@ export default function NotesView({
   const handleDeleteNote = async (id: string) => {
     if (onDeleteNote) {
       const result = await onDeleteNote(id);
-      if (!result.success) {
+      if (result.success) {
         // Fallback to local state
         const filtered = notes.filter((n) => n.id !== id);
         setNotes(filtered);

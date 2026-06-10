@@ -47,7 +47,8 @@
       "content": "string",
       "article_id": 1,
       "author_id": 1,
-      "author_name": "string",
+      "author_name": "string (nickname优先)",
+      "author_nickname": "string",
       "author_avatar": "string",
       "parent_id": null,
       "is_deleted": false,
@@ -58,6 +59,7 @@
           "id": 2,
           "content": "string",
           "author_name": "string",
+          "author_nickname": "string",
           "parent_id": 1,
           "replies": []
         }
@@ -95,6 +97,7 @@
 2. 如果有parent_id，检查父评论是否存在且属于同一文章
 3. 创建评论
 4. 自动关联作者
+5. 如果评论者不是文章作者，创建通知发送给作者
 
 ### 3. 更新评论 `PUT /api/v1/comments/{comment_id}`
 

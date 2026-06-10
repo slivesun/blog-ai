@@ -13,7 +13,7 @@ export function transformArticle(apiArticle: any): BlogArticle {
     abstract: apiArticle.abstract || "",
     content: apiArticle.content,
     category: apiArticle.category?.name || apiArticle.category || "General",
-    author: apiArticle.author_name || apiArticle.author?.username || apiArticle.author || "Anonymous",
+    author: apiArticle.author_nickname || apiArticle.author_name || apiArticle.author?.nickname || apiArticle.author?.username || apiArticle.author || "Anonymous",
     authorId: apiArticle.author_id || apiArticle.author?.id,
     authorRole: apiArticle.author_role || apiArticle.author?.role || "Contributor",
     authorAvatar: apiArticle.author_avatar || apiArticle.author?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop",
@@ -30,8 +30,8 @@ export function transformArticle(apiArticle: any): BlogArticle {
 export function transformComment(apiComment: any): BlogComment {
   return {
     id: String(apiComment.id),
-    author: apiComment.author?.username || apiComment.author_name || "Anonymous",
-    avatar: apiComment.author?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop",
+    author: apiComment.author_nickname || apiComment.author?.nickname || apiComment.author_name || apiComment.author?.username || "Anonymous",
+    avatar: apiComment.author_avatar || apiComment.author?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop",
     text: apiComment.content,
     date: formatDate(apiComment.created_at)
   };
@@ -75,7 +75,9 @@ export function transformNotification(apiNotif: any): AppNotification {
 export function transformProfile(apiProfile: any): UserProfile {
   return {
     id: apiProfile.id,
-    name: apiProfile.full_name || apiProfile.username || "User",
+    username: apiProfile.username,
+    nickname: apiProfile.nickname,
+    name: apiProfile.nickname || apiProfile.full_name || apiProfile.username || "User",
     role: apiProfile.role || "Contributor",
     bio: apiProfile.bio || "",
     avatarUrl: apiProfile.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop",

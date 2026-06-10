@@ -74,6 +74,7 @@ class CommentResponse(CommentBase):
     article_id: int
     author_id: int
     author_name: str
+    author_nickname: Optional[str] = None
     author_avatar: Optional[str] = None
     parent_id: Optional[int] = None
     is_deleted: bool
@@ -123,6 +124,7 @@ class ArticleResponse(ArticleBase):
     slug: str
     author_id: int
     author_name: str
+    author_nickname: Optional[str] = None
     author_role: Optional[str] = None
     author_avatar: Optional[str] = None
     category: Optional[CategoryResponse] = None
@@ -130,6 +132,7 @@ class ArticleResponse(ArticleBase):
     likes: int
     views: int
     comment_count: int = 0
+    comments: List[CommentResponse] = []
     is_draft: bool
     is_published: bool
     published_at: Optional[datetime] = None
@@ -148,6 +151,7 @@ class ArticleBriefResponse(BaseModel):
     cover_image: Optional[str] = None
     category: Optional[str] = None
     author_name: str
+    author_nickname: Optional[str] = None
     author_avatar: Optional[str] = None
     likes: int
     comment_count: int = 0

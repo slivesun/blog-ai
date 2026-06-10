@@ -50,7 +50,7 @@ export default function NotificationsView({
   const handleDeleteNotif = async (id: string) => {
     if (onDeleteNotification) {
       const result = await onDeleteNotification(id);
-      if (!result.success) {
+      if (result.success) {
         setNotifications((prev) => prev.filter((n) => n.id !== id));
       }
     } else {

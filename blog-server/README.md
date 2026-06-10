@@ -2,15 +2,16 @@
 
 ## 项目概述
 
-基于 FastAPI 构建的博客系统后端 API 服务，提供完整的 RESTful 接口。
+基于 FastAPI 构建的博客系统后端 API 服务，提供完整的 RESTful 接口，包括用户认证、文章管理、评论系统、笔记功能和通知推送。
 
 ## 技术栈
 
-- **框架**: FastAPI 0.95+
+- **框架**: FastAPI 0.115+
 - **数据库**: SQLite (开发) / PostgreSQL (生产)
 - **ORM**: SQLAlchemy 2.0+
-- **认证**: JWT Token
+- **认证**: JWT Token (python-jose + passlib)
 - **验证**: Pydantic v2
+- **迁移**: 自定义脚本 (scripts/)
 
 ## 快速开始
 
@@ -42,7 +43,14 @@ cp .env.example .env
 python scripts/init_db.py
 ```
 
-### 5. 运行服务
+### 5. 运行数据库迁移（如需要）
+
+```bash
+# 添加 nickname 列到 users 表
+python scripts/add_nickname_column.py
+```
+
+### 6. 运行服务
 
 ```bash
 # 开发环境（热重载）
@@ -52,7 +60,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 python scripts/run_dev.py
 ```
 
-### 6. 访问 API 文档
+### 7. 访问 API 文档
 
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
@@ -62,17 +70,32 @@ python scripts/run_dev.py
 ```
 blog-server/
 ├── app/
-│   ├── api/              # API 路由
+│   ├── api/
 │   │   └── v1/
 │   │       └── endpoints/
-│   ├── core/             # 核心配置
-│   ├── db/               # 数据库配置
+│   │           ├── articles.py    # 文章 CRUD + 点赞 + 评论树
+│   │           ├── auth.py        # 注册/登录/登出
+│   │           ├── comments.py    # 评论 CRUD + 通知触发
+│   │           ├── notes.py       # 笔记 CRUD
+│   │           ├── notifications.py # 通知列表/已读/删除
+│   │           ├── profile.py     # 个人资料/设置
+│   │           ├── categories.py  # 分类管理
+│   │           └── tags.py        # 标签管理
+│   ├── core/             # 核心配置 (config, security)
+│   ├── db/               # 数据库配置 (session, base)
 │   ├── models/            # SQLAlchemy 模型
+│   │   ├── user.py        # 用户模型 (含 nickname)
+│   │   ├── article.py     # 文章模型
+│   │   ├── comment.py     # 评论模型 (支持嵌套)
+│   │   ├── note.py        # 笔记模型
+│   │   └── notification.py # 通知模型
 │   ├── schemas/           # Pydantic 模式
 │   ├── services/         # 业务逻辑
-│   ├── utils/            # 工具函数
 │   └── middleware/       # 中间件
-├── scripts/             # 脚本
+├── scripts/
+│   ├── init_db.py         # 数据库初始化
+│   ├── add_nickname_column.py # 迁移: 添加 nickname 列
+│   └── run_dev.py         # 开发启动脚本
 ├── tests/               # 测试
 └── requirements.txt
 ```
@@ -80,23 +103,23 @@ blog-server/
 ## API 接口
 
 ### 认证接口
-- `POST /api/v1/auth/register` - 用户注册
-- `POST /api/v1/auth/login` - 用户登录
+- `POST /api/v1/auth/register` - 用户注册 (自动设置 nickname=username)
+- `POST /api/v1/auth/login` - 用户登录 (返回 JWT token + 用户信息)
 - `POST /api/v1/auth/logout` - 用户登出
-- `GET /api/v1/auth/me` - 获取当前用户
+- `GET /api/v1/auth/me` - 获取当前用户信息
 
 ### 文章接口
-- `GET /api/v1/articles` - 获取文章列表
-- `GET /api/v1/articles/{id}` - 获取文章详情
+- `GET /api/v1/articles` - 获取文章列表 (分页 + 简要信息)
+- `GET /api/v1/articles/{id}` - 获取文章详情 (含完整评论树)
 - `POST /api/v1/articles` - 创建文章
 - `PUT /api/v1/articles/{id}` - 更新文章
 - `DELETE /api/v1/articles/{id}` - 删除文章
-- `POST /api/v1/articles/{id}/like` - 点赞文章
+- `POST /api/v1/articles/{id}/like` - 点赞文章 (触发通知)
 
 ### 评论接口
 - `GET /api/v1/articles/{id}/comments` - 获取文章评论
-- `POST /api/v1/articles/{id}/comments` - 添加评论
-- `DELETE /api/v1/comments/{id}` - 删除评论
+- `POST /api/v1/articles/{id}/comments` - 添加评论 (支持嵌套回复，触发通知)
+- `DELETE /api/v1/comments/{id}` - 删除评论 (软删除)
 
 ### 分类接口
 - `GET /api/v1/categories` - 获取分类列表
@@ -120,12 +143,32 @@ blog-server/
 - `GET /api/v1/notifications` - 获取通知列表
 - `PUT /api/v1/notifications/{id}/read` - 标记已读
 - `PUT /api/v1/notifications/read-all` - 全部标记已读
+- `DELETE /api/v1/notifications/{id}` - 删除通知
 
-### 用户设置接口
+### 用户资料接口
+- `GET /api/v1/profile` - 获取个人资料
+- `PUT /api/v1/profile` - 更新个人资料 (支持 nickname 字段)
 - `GET /api/v1/settings` - 获取用户设置
 - `PUT /api/v1/settings` - 更新用户设置
-- `GET /api/v1/profile` - 获取个人资料
-- `PUT /api/v1/profile` - 更新个人资料
+- `PUT /api/v1/profile/password` - 修改密码
+
+## 核心功能说明
+
+### 用户昵称 (Nickname)
+- 用户模型包含 `nickname` 字段，与 `username` 独立
+- 注册时自动将 nickname 设为 username
+- 文章、评论、笔记展示时优先使用 nickname
+- 通过 `scripts/add_nickname_column.py` 迁移已有数据库
+
+### 通知系统
+- 点赞文章时，文章作者收到通知
+- 评论他人文章时，文章作者收到通知
+- 支持标记已读、全部已读、删除操作
+
+### 评论系统
+- 支持嵌套回复 (parent_id)
+- 软删除 (is_deleted 标记)
+- 返回时自动构建评论树 (递归)
 
 ## 环境配置
 
@@ -140,7 +183,7 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 # CORS 配置
-CORS_ORIGINS=["http://localhost:3000"]
+CORS_ORIGINS=["http://localhost:5173", "http://localhost:3000"]
 
 # 环境模式
 ENVIRONMENT=development

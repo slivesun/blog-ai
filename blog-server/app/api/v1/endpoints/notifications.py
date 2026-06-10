@@ -19,6 +19,49 @@ from app.core.dependencies import get_current_active_user
 router = APIRouter()
 
 
+@router.post("", response_model=DataResponse[NotificationResponse], status_code=status.HTTP_201_CREATED)
+async def create_notification(
+    notification_data: NotificationCreate,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Session = Depends(get_db)
+):
+    """
+    创建通知（管理员/系统使用）
+
+    参数:
+        notification_data: 通知创建数据
+        current_user: 当前认证用户
+        db: 数据库会话
+
+    返回:
+        DataResponse: 创建的通知
+
+    异常:
+        HTTPException: 非管理员无权限
+    """
+    # 仅管理员可创建通知
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admin can create notifications"
+        )
+
+    notification = Notification(
+        user_id=notification_data.user_id,
+        title=notification_data.title,
+        description=notification_data.description,
+        notification_type=notification_data.notification_type,
+        link_to_id=notification_data.link_to_id,
+        is_read=notification_data.is_read
+    )
+
+    db.add(notification)
+    db.commit()
+    db.refresh(notification)
+
+    return DataResponse(data=NotificationResponse.model_validate(notification))
+
+
 @router.get("", response_model=DataResponse[NotificationListResponse])
 async def get_notifications(
     current_user: Annotated[User, Depends(get_current_active_user)],

@@ -82,7 +82,7 @@
 
 ### 2. 获取文章详情 `GET /api/v1/articles/{id}`
 
-**功能说明**: 获取单篇文章详情，包含完整内容
+**功能说明**: 获取单篇文章详情，包含完整内容和评论树
 
 **路径参数**:
 - `article_id`: 文章ID
@@ -102,11 +102,34 @@
     "tags": [ /* TagResponse[] */ ],
     "author_id": 1,
     "author_name": "string",
+    "author_nickname": "string",
     "author_role": "string",
     "author_avatar": "string",
     "likes": 142,
     "views": 1000,
     "comment_count": 5,
+    "comments": [
+      {
+        "id": 1,
+        "content": "string",
+        "author_id": 1,
+        "author_name": "string (nickname优先)",
+        "author_nickname": "string",
+        "author_avatar": "string",
+        "parent_id": null,
+        "is_deleted": false,
+        "created_at": "datetime",
+        "updated_at": "datetime",
+        "replies": [
+          {
+            "id": 2,
+            "content": "string",
+            "parent_id": 1,
+            "replies": []
+          }
+        ]
+      }
+    ],
     "is_draft": false,
     "is_published": true,
     "published_at": "datetime",
@@ -116,6 +139,13 @@
   }
 }
 ```
+
+**业务逻辑**:
+1. 检查文章是否存在
+2. 检查用户权限（草稿只能作者和管理员看）
+3. 增加浏览数
+4. 递归构建评论树 (排除已删除评论)
+5. 返回完整文章内容 + 评论树
 
 **业务逻辑**:
 1. 检查文章是否存在
@@ -176,9 +206,9 @@
 
 ### 6. 点赞文章 `POST /api/v1/articles/{id}/like`
 
-**功能说明**: 点赞文章
+**功能说明**: 点赞文章，自动为文章作者创建通知
 
-**认证要求**: 不需要（游客也可点赞）
+**认证要求**: 需要登录
 
 **响应格式**:
 ```json
@@ -190,6 +220,10 @@
   }
 }
 ```
+
+**业务逻辑**:
+1. 文章 likes 计数 +1
+2. 如果点赞者不是文章作者，创建通知发送给作者
 
 ## 分类管理
 

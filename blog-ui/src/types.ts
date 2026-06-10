@@ -50,6 +50,8 @@ export interface AppNotification {
 
 export interface UserProfile {
   id?: number;
+  username?: string;
+  nickname?: string;
   name: string;
   role: string;
   bio: string;

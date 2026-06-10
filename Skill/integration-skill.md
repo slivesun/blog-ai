@@ -65,20 +65,34 @@ server: {
 项目已提供完整的 API 服务封装，参见 `src/api.ts`:
 
 ```typescript
-import api from './api';
+import { articleApi, authApi, commentApi, noteApi, notificationApi, profileApi } from './api';
 
 // 登录
-const result = await api.auth.login(username, password);
+const result = await authApi.login(username, password);
 
 // 获取文章列表
-const result = await api.articles.getArticles({ page: 1, page_size: 10 });
+const result = await articleApi.getArticles({ page: 1, page_size: 10 });
 
 // 创建文章
-const result = await api.articles.createArticle({
+const result = await articleApi.createArticle({
   title: 'New Article',
   content: 'Article content',
   category_id: 1,
 });
+```
+
+### 数据转换模块
+
+`src/dataTransform.ts` 负责将后端 API 响应转换为前端 TypeScript 类型:
+
+```typescript
+import { transformArticle, transformProfile, transformComment } from './dataTransform';
+
+// 转换文章数据 (优先使用 nickname)
+const article = transformArticle(apiResponse);
+
+// 转换用户资料
+const profile = transformProfile(apiResponse);
 ```
 
 ## 接口调用示例
@@ -138,17 +152,16 @@ await api.articles.likeArticle(1);
 ### 评论操作
 
 ```typescript
-// 获取评论
-const comments = await api.comments.getComments(articleId);
+import { commentApi } from './api';
 
-// 发表评论
-await api.comments.createComment(articleId, 'Great article!');
+// 发表评论 (自动触发通知给文章作者)
+await commentApi.createComment(articleId, 'Great article!');
 
-// 回复评论
-await api.comments.createComment(articleId, 'Good point!', parentCommentId);
+// 回复评论 (支持嵌套)
+await commentApi.createComment(articleId, 'Good point!', parentCommentId);
 
 // 删除评论
-await api.comments.deleteComment(commentId);
+await commentApi.deleteComment(commentId);
 ```
 
 ## 错误处理

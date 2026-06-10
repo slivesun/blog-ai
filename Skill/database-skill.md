@@ -55,6 +55,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     full_name = Column(String(100), nullable=True)
+    nickname = Column(String(100), nullable=True, comment="昵称")
     bio = Column(Text, nullable=True)
     avatar_url = Column(String(500), nullable=True)
     github_url = Column(String(500), nullable=True)
@@ -72,6 +73,12 @@ class User(Base):
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     user_settings = relationship("UserSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
 ```
+
+### nickname 字段说明
+- 注册时自动设置为 username
+- 用户可通过个人资料页面修改
+- 文章、评论、笔记展示时优先使用 nickname (fallback: full_name → username)
+- 迁移脚本: `scripts/add_nickname_column.py`
 
 ### 2. Article 模型
 
@@ -260,7 +267,23 @@ def init_default_categories(db):
 
 ## 数据库迁移
 
-使用 Alembic 进行数据库迁移管理：
+### 自定义迁移脚本 (当前使用)
+
+项目使用 `scripts/` 目录下的自定义迁移脚本:
+
+```bash
+# 添加 nickname 列到 users 表
+python scripts/add_nickname_column.py
+```
+
+脚本逻辑:
+1. 检查列是否已存在
+2. 执行 ALTER TABLE 添加列
+3. 将现有数据设置默认值
+
+### Alembic 迁移 (可选)
+
+也可使用 Alembic 进行数据库迁移管理：
 
 ```bash
 # 初始化 Alembic

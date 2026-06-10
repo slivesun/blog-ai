@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { BlogArticle, BlogComment, ActivePath, SystemSettings, UserProfile } from "../../types";
 import { Heart, MessageSquare, ArrowLeft, Send, Sparkles, Plus, CheckCircle, ChevronRight, Share2, Loader2 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
+import { articleApi } from "../../api";
+import { transformArticle } from "../../dataTransform";
 
 interface BlogViewProps {
   articles: BlogArticle[];
@@ -51,8 +53,34 @@ export default function BlogView({
 
   const [visibleCount, setVisibleCount] = useState(3);
   const [hasMore, setHasMore] = useState(true);
+  const [detailLoaded, setDetailLoaded] = useState(false);
 
   const activeArticle = articles.find((a) => a.id === (urlArticleId || selectedArticleId));
+
+  // 当进入详情页时，加载完整的文章数据（含评论）
+  useEffect(() => {
+    const articleId = urlArticleId || selectedArticleId;
+    if (currentPath === "blog-detail" && articleId && !detailLoaded) {
+      const loadArticleDetail = async () => {
+        try {
+          const response = await articleApi.getArticle(Number(articleId));
+          if (response.success && response.data) {
+            const fullArticle = transformArticle(response.data);
+            setArticles(prev => prev.map(a => a.id === articleId ? { ...a, ...fullArticle } : a));
+          }
+        } catch (e) {
+          console.error("Failed to load article detail:", e);
+        } finally {
+          setDetailLoaded(true);
+        }
+      };
+      loadArticleDetail();
+    }
+    // 重置详情加载状态
+    if (currentPath !== "blog-detail") {
+      setDetailLoaded(false);
+    }
+  }, [currentPath, urlArticleId, selectedArticleId, detailLoaded]);
 
   const handleLike = async (articleId: string) => {
     if (onLikeArticle) {

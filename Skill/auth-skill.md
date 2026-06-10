@@ -29,6 +29,7 @@
       "username": "string",
       "email": "string",
       "full_name": "string",
+      "nickname": "string",
       "role": "user",
       "is_active": true,
       "is_admin": false
@@ -47,7 +48,8 @@
 2. 验证邮箱唯一性
 3. 密码使用 bcrypt 哈希存储
 4. 自动创建用户默认设置
-5. 生成 JWT 访问令牌
+5. 自动设置 nickname = username
+6. 生成 JWT 访问令牌
 
 ### 2. 用户登录 `POST /api/v1/auth/login`
 
@@ -91,6 +93,7 @@
     "username": "string",
     "email": "string",
     "full_name": "string",
+    "nickname": "string",
     "bio": "string",
     "avatar_url": "string",
     "github_url": "string",

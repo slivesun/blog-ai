@@ -41,6 +41,7 @@ export default function ProfileView({
   onRegister,
 }: ProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [newNickname, setNewNickname] = useState(profile.nickname || "");
   const [newName, setNewName] = useState(profile.name);
   const [newRole, setNewRole] = useState(profile.role);
   const [newBio, setNewBio] = useState(profile.bio);
@@ -65,15 +66,17 @@ export default function ProfileView({
     try {
       if (onUpdateProfile) {
         const result = await onUpdateProfile({
+          nickname: newNickname || undefined,
           full_name: newName,
           bio: newBio,
           github_url: profile.githubUrl,
         });
-        
+
         if (result.success) {
           setProfile({
             ...profile,
-            name: newName,
+            nickname: newNickname || undefined,
+            name: newNickname || newName,
             bio: newBio
           });
           setIsEditing(false);
@@ -81,7 +84,8 @@ export default function ProfileView({
       } else {
         setProfile({
           ...profile,
-          name: newName,
+          nickname: newNickname || undefined,
+          name: newNickname || newName,
           role: newRole,
           bio: newBio
         });
@@ -95,7 +99,7 @@ export default function ProfileView({
   const handleDeletePublished = async (id: string) => {
     if (onDeleteArticle) {
       const result = await onDeleteArticle(id);
-      if (!result.success) {
+      if (result.success) {
         setArticles((prev) => prev.filter((art) => art.id !== id));
       }
     } else {
@@ -364,12 +368,27 @@ export default function ProfileView({
             {isEditing ? (
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                  />
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">昵称 / Nickname</label>
+                    <input
+                      type="text"
+                      className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold w-full"
+                      value={newNickname}
+                      onChange={(e) => setNewNickname(e.target.value)}
+                      placeholder="输入昵称"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">用户名 / Username</label>
+                    <input
+                      type="text"
+                      className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold w-full"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input
                     type="text"
                     className="rounded bg-slate-950 border border-slate-800 text-xs text-white px-3 py-1.5 font-mono"
@@ -394,6 +413,7 @@ export default function ProfileView({
                   </button>
                   <button
                     onClick={() => {
+                      setNewNickname(profile.nickname || "");
                       setNewName(profile.name);
                       setNewRole(profile.role);
                       setNewBio(profile.bio);
@@ -473,8 +493,12 @@ export default function ProfileView({
         {/* Disconnect Access Trigger */}
         <button
           onClick={() => {
-            setIsLoggedIn(false);
-            setPath("home");
+            if (onLogout) {
+              onLogout();
+            } else {
+              setIsLoggedIn(false);
+              setPath("home");
+            }
           }}
           className="flex items-center gap-1 text-slate-500 hover:text-red-400 text-xs font-mono mb-2 cursor-pointer"
         >

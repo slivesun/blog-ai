@@ -363,6 +363,7 @@ export const profileApi = {
   },
 
   async updateProfile(data: {
+    nickname?: string;
     full_name?: string;
     bio?: string;
     avatar_url?: string;

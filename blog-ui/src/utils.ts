@@ -330,33 +330,7 @@ export function rotateKey(epoch: number): string {
   }
 ];
 
-export const INITIAL_NOTIFICATIONS: AppNotification[] = [
-  {
-    id: "notif-1",
-    title: "Security Update Recommended",
-    description: "Multi-layered container access and API proxy controls are fully active. Rotate authorization keys periodically.",
-    time: "4h ago",
-    type: "security",
-    isRead: false
-  },
-  {
-    id: "notif-2",
-    title: "Synchronized Cache Active",
-    description: "Cloud database synchronization finished with status code 200 (Success). All clients are updated.",
-    time: "10h ago",
-    type: "sync",
-    isRead: false
-  },
-  {
-    id: "notif-3",
-    title: "Alex Chen added a comment",
-    description: "On Elena's draft: 'Excellent breakdown of database proxy configurations.' Check the comment stream.",
-    time: "1d ago",
-    type: "interaction",
-    isRead: true,
-    linkToId: "microservices-2024"
-  }
-];
+export const INITIAL_NOTIFICATIONS: AppNotification[] = [];
 
 export const INITIAL_PROFILE: UserProfile = {
   name: "Alex Chen",

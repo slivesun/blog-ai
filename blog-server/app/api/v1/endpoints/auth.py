@@ -63,6 +63,7 @@ async def register(
     hashed_password = get_password_hash(request.password)
     user = User(
         username=request.username,
+        nickname=request.username,
         email=request.email,
         hashed_password=hashed_password,
         full_name=request.username,

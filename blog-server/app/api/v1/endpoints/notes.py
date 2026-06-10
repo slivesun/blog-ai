@@ -28,7 +28,7 @@ def build_note_response(note: Note) -> NoteResponse:
         category=note.category,
         tags=note.tags,
         author_id=note.author_id,
-        author_name=note.author.username if note.author else None,
+        author_name=(note.author.nickname or note.author.username) if note.author else None,
         created_at=note.created_at,
         updated_at=note.updated_at
     )

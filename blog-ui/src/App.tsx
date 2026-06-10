@@ -166,8 +166,8 @@ export default function App() {
       loadNotes();
     }
 
-    // Load notifications only on notifications page
-    if (currentPath === "notifications" && !notificationsLoaded) {
+    // Load notifications whenever logged in (needed for header badge)
+    if (!notificationsLoaded) {
       const loadNotifications = async () => {
         try {
           const response = await notificationApi.getNotifications();

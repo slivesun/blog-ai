@@ -12,9 +12,11 @@ from app.db.session import get_db
 from app.models.user import User
 from app.models.article import Article, Category, Tag
 from app.models.comment import Comment
+from app.models.notification import Notification
 from app.schemas.article import (
     ArticleCreate, ArticleUpdate, ArticleResponse, ArticleBriefResponse,
-    ArticleListResponse, ArticleLikeResponse, CategoryResponse, TagResponse
+    ArticleListResponse, ArticleLikeResponse, CategoryResponse, TagResponse,
+    CommentResponse
 )
 from app.schemas.common import DataResponse, PaginatedResponse
 from app.core.dependencies import get_current_user, get_current_active_user
@@ -23,6 +25,29 @@ from app.utils.slug import slugify
 
 
 router = APIRouter()
+
+
+def _build_comment_tree(comments, parent_id=None):
+    """构建评论树"""
+    result = []
+    for c in comments:
+        if c.parent_id == parent_id and not c.is_deleted:
+            replies = _build_comment_tree(comments, c.id)
+            result.append(CommentResponse(
+                id=c.id,
+                content=c.content,
+                article_id=c.article_id,
+                author_id=c.author_id,
+                author_name=(c.author.nickname or c.author.username) if c.author else "Unknown",
+                author_nickname=c.author.nickname if c.author else None,
+                author_avatar=c.author.avatar_url if c.author else None,
+                parent_id=c.parent_id,
+                is_deleted=c.is_deleted,
+                created_at=c.created_at,
+                updated_at=c.updated_at,
+                replies=replies
+            ))
+    return result
 
 
 def build_article_response(article: Article, include_content: bool = False) -> ArticleResponse:
@@ -51,6 +76,10 @@ def build_article_response(article: Article, include_content: bool = False) -> A
         for tag in article.tags
     ]
 
+    # 构建评论列表（仅顶级评论，嵌套回复通过 replies 字段返回）
+    top_comments = [c for c in article.comments if c.parent_id is None and not c.is_deleted]
+    comments_data = _build_comment_tree(article.comments)
+
     # 格式化日期
     date_str = article.published_at.strftime("%b %d, %Y") if article.published_at else article.created_at.strftime("%b %d, %Y")
 
@@ -64,14 +93,16 @@ def build_article_response(article: Article, include_content: bool = False) -> A
         category_id=article.category_id,
         tag_ids=[tag.id for tag in article.tags],
         author_id=article.author_id,
-        author_name=article.author.username if article.author else "Unknown",
+        author_name=(article.author.nickname or article.author.username) if article.author else "Unknown",
+        author_nickname=article.author.nickname if article.author else None,
         author_role=article.author.role if article.author else None,
         author_avatar=article.author.avatar_url if article.author else None,
         category=category_data,
         tags=tags_data,
         likes=article.likes,
         views=article.views,
-        comment_count=len(article.comments),
+        comment_count=len(top_comments),
+        comments=comments_data,
         is_draft=article.is_draft,
         is_published=article.is_published,
         published_at=article.published_at,
@@ -92,7 +123,8 @@ def build_brief_response(article: Article) -> ArticleBriefResponse:
         abstract=article.abstract,
         cover_image=article.cover_image,
         category=article.category.name if article.category else None,
-        author_name=article.author.username if article.author else "Unknown",
+        author_name=(article.author.nickname or article.author.username) if article.author else "Unknown",
+        author_nickname=article.author.nickname if article.author else None,
         author_avatar=article.author.avatar_url if article.author else None,
         likes=article.likes,
         comment_count=len(article.comments),
@@ -402,7 +434,8 @@ async def delete_article(
 @router.post("/{article_id}/like", response_model=DataResponse[ArticleLikeResponse])
 async def like_article(
     article_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)
 ):
     """
     点赞文章
@@ -410,6 +443,7 @@ async def like_article(
     参数:
         article_id: 文章ID
         db: 数据库会话
+        current_user: 当前用户（可选）
 
     返回:
         DataResponse: 点赞后的文章点赞数
@@ -426,6 +460,19 @@ async def like_article(
         )
 
     article.likes += 1
+
+    # 创建通知给文章作者（如果点赞者已认证且不是作者本人）
+    if current_user and current_user.id != article.author_id:
+        liker_name = current_user.nickname or current_user.username
+        notification = Notification(
+            user_id=article.author_id,
+            title=f"{liker_name} 点赞了你的文章",
+            description=f"你的文章「{article.title}」收到了一个新的点赞",
+            notification_type="interaction",
+            link_to_id=str(article.id)
+        )
+        db.add(notification)
+
     db.commit()
 
     return DataResponse(

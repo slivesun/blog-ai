@@ -109,7 +109,14 @@ cp .env.example .env
 python scripts/init_db.py
 ```
 
-##### 5. 运行服务
+##### 5. 运行数据库迁移
+
+```bash
+# 添加 nickname 列 (如已存在会自动跳过)
+python scripts/add_nickname_column.py
+```
+
+##### 6. 运行服务
 
 ```bash
 # 开发环境 (热重载)
