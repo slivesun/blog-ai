@@ -175,10 +175,16 @@ export default function NotesView({
 
   const renderMarkdownHTML = (md: string) => {
     if (!md) return "<p class='text-slate-500 italic'>No content loaded inside markdown interpreter.</p>";
-    
+
     let html = md;
-    
-    html = html.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    // 先转义 &，再转义 < > " ' 以防 XSS（注意顺序：& 必须最先转义）
+    html = html
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
 
     html = html.replace(/^# (.*$)/gim, '<h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white mb-4 border-b border-slate-800 pb-2 font-heading">$1</h1>');
     html = html.replace(/^## (.*$)/gim, '<h2 class="text-lg font-bold text-white mb-3 mt-6 font-heading">$1</h2>');

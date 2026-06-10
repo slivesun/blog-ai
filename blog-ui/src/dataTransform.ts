@@ -63,11 +63,11 @@ export function transformNotification(apiNotif: any): AppNotification {
   return {
     id: String(apiNotif.id),
     title: apiNotif.title,
-    description: apiNotif.message || apiNotif.content || "",
+    description: apiNotif.description || apiNotif.message || apiNotif.content || "",
     time: formatTimeAgo(apiNotif.created_at),
-    type: apiNotif.type || "system",
+    type: apiNotif.notification_type || apiNotif.type || "system",
     isRead: apiNotif.is_read || false,
-    linkToId: apiNotif.related_id ? String(apiNotif.related_id) : undefined
+    linkToId: apiNotif.link_to_id ? String(apiNotif.link_to_id) : undefined
   };
 }
 

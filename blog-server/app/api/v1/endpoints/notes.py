@@ -99,24 +99,33 @@ async def get_notes(
 @router.get("/{note_id}", response_model=DataResponse[NoteResponse])
 async def get_note(
     note_id: int,
+    current_user: Annotated[User, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
     """
-    获取笔记详情
+    获取笔记详情（仅限笔记所有者或管理员）
 
     参数:
         note_id: 笔记ID
         db: 数据库会话
+        current_user: 当前认证用户
 
     返回:
         DataResponse: 笔记详情
 
     异常:
-        HTTPException: 笔记不存在
+        HTTPException: 笔记不存在或无权限
     """
     note = db.query(Note).filter(Note.id == note_id).first()
 
     if not note:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Note not found"
+        )
+
+    # 权限校验：仅笔记所有者或管理员可查看
+    if note.author_id != current_user.id and not current_user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Note not found"

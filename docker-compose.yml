@@ -11,7 +11,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=production
+      - ENVIRONMENT=development
       - DATABASE_URL=sqlite:///./blog.db
       - SECRET_KEY=${SECRET_KEY:-change-this-to-a-secure-random-string}
       - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000

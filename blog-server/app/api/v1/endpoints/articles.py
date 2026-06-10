@@ -168,11 +168,15 @@ async def get_articles(
     """
     query = db.query(Article)
 
-    # 过滤已发布的文章
+    # 过滤已发布的文章（生产安全：严格控制草稿可见性）
     if not include_drafts or not current_user:
+        # 未登录或未请求草稿 → 只看已发布
         query = query.filter(Article.is_published == True)
-    elif current_user and not current_user.is_admin:
-        # 非管理员只能看自己的草稿
+    elif current_user.is_admin:
+        # 管理员请求草稿 → 可看所有文章（含未发布）
+        pass
+    else:
+        # 普通用户请求草稿 → 只看已发布 + 自己的草稿
         query = query.filter(
             (Article.is_published == True) |
             ((Article.is_draft == True) & (Article.author_id == current_user.id))

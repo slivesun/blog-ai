@@ -93,13 +93,14 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             # 记录异常
             logger.exception(f"Unhandled exception: {str(e)}")
 
-            # 返回500错误响应
+            # 返回500错误响应（生产环境隐藏内部错误细节）
             from fastapi.responses import JSONResponse
+            from app.core.config import settings as app_settings
             return JSONResponse(
                 status_code=500,
                 content={
                     "success": False,
                     "message": "Internal server error",
-                    "detail": str(e) if hasattr(e, '__str__') else "Unknown error"
+                    "detail": str(e) if app_settings.is_development else "An error occurred"
                 }
             )
