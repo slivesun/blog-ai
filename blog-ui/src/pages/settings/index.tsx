@@ -6,6 +6,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SystemSettings, ActivePath } from "../../types";
+import { useLanguage } from "../../context/LanguageContext";
 import { Sliders, BellOff, MessageSquare, Palette, RefreshCcw, CheckCircle, Info, LayoutGrid, Loader2 } from "lucide-react";
 
 interface SettingsProps {
@@ -23,6 +24,7 @@ export default function SettingsView({
   onUpdateSettings,
   setPath,
 }: SettingsProps) {
+  const { t } = useLanguage();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -43,11 +45,11 @@ export default function SettingsView({
         
         if (result.success) {
           setSettings((prev) => ({ ...prev, allowNotifications: next }));
-          triggerFeedback(`Notification parameters configured: ${next ? "Allow Alert Stream" : "Disable Alerts"}`);
+          triggerFeedback(next ? t.settings.success.notifyAllow : t.settings.success.notifyDisable);
         }
       } else {
         setSettings((prev) => ({ ...prev, allowNotifications: next }));
-        triggerFeedback(`Notification parameters configured: ${next ? "Allow Alert Stream" : "Disable Alerts"}`);
+        triggerFeedback(next ? t.settings.success.notifyAllow : t.settings.success.notifyDisable);
       }
     } finally {
       setIsSaving(false);
@@ -66,11 +68,11 @@ export default function SettingsView({
         
         if (result.success) {
           setSettings((prev) => ({ ...prev, allowComments: next }));
-          triggerFeedback(`Comments lockdown: ${next ? "Allow reader feedback" : "Secure locks enabled (Read only)"}`);
+          triggerFeedback(next ? t.settings.success.commentsAllow : t.settings.success.commentsDisable);
         }
       } else {
         setSettings((prev) => ({ ...prev, allowComments: next }));
-        triggerFeedback(`Comments lockdown: ${next ? "Allow reader feedback" : "Secure locks enabled (Read only)"}`);
+        triggerFeedback(next ? t.settings.success.commentsAllow : t.settings.success.commentsDisable);
       }
     } finally {
       setIsSaving(false);
@@ -89,11 +91,11 @@ export default function SettingsView({
         
         if (result.success) {
           setSettings((prev) => ({ ...prev, highDensityLayout: next }));
-          triggerFeedback(`Layout scale updated: ${next ? "High density active" : "Standard canvas standard"}`);
+          triggerFeedback(next ? t.settings.success.densityHigh : t.settings.success.densityStandard);
         }
       } else {
         setSettings((prev) => ({ ...prev, highDensityLayout: next }));
-        triggerFeedback(`Layout scale updated: ${next ? "High density active" : "Standard canvas standard"}`);
+        triggerFeedback(next ? t.settings.success.densityHigh : t.settings.success.densityStandard);
       }
     } finally {
       setIsSaving(false);
@@ -110,11 +112,11 @@ export default function SettingsView({
         
         if (result.success) {
           setSettings((prev) => ({ ...prev, themeAccent: theme }));
-          triggerFeedback(`Visual highlight configured to ${theme.toUpperCase()}`);
+          triggerFeedback(t.settings.success.theme.replace("{theme}", theme.toUpperCase()));
         }
       } else {
         setSettings((prev) => ({ ...prev, themeAccent: theme }));
-        triggerFeedback(`Visual highlight configured to ${theme.toUpperCase()}`);
+        triggerFeedback(t.settings.success.theme.replace("{theme}", theme.toUpperCase()));
       }
     } finally {
       setIsSaving(false);
@@ -125,15 +127,15 @@ export default function SettingsView({
 
   const handleReset = () => {
     onResetDefaults();
-    triggerFeedback("System cache, worksheets, and layouts successfully restored.");
+    triggerFeedback(t.settings.success.reset);
     setTimeout(() => navigate("/"), 1200);
   };
 
   const paletteOptions = [
-    { id: "cyan" as const, label: "Space Cyan", bgClass: "bg-cyan-500", borderClass: "border-cyan-500/20", colorText: "text-cyan-400" },
-    { id: "violet" as const, label: "Violet Obsidian", bgClass: "bg-violet-500", borderClass: "border-violet-500/20", colorText: "text-violet-400" },
-    { id: "amber" as const, label: "Solar Amber", bgClass: "bg-amber-500", borderClass: "border-amber-500/20", colorText: "text-amber-400" },
-    { id: "emerald" as const, label: "Emerald Terminal", bgClass: "bg-emerald-500", borderClass: "border-emerald-500/20", colorText: "text-emerald-400" },
+    { id: "cyan" as const, label: t.settings.theme.cyan, bgClass: "bg-cyan-500", borderClass: "border-cyan-500/20", colorText: "text-cyan-400" },
+    { id: "violet" as const, label: t.settings.theme.violet, bgClass: "bg-violet-500", borderClass: "border-violet-500/20", colorText: "text-violet-400" },
+    { id: "amber" as const, label: t.settings.theme.amber, bgClass: "bg-amber-500", borderClass: "border-amber-500/20", colorText: "text-amber-400" },
+    { id: "emerald" as const, label: t.settings.theme.emerald, bgClass: "bg-emerald-500", borderClass: "border-emerald-500/20", colorText: "text-emerald-400" },
   ];
 
   const themeBtnColors = {
@@ -150,10 +152,10 @@ export default function SettingsView({
       <div className="mb-10 pb-6 border-b border-slate-800">
         <h1 className="text-3xl font-heading font-extrabold tracking-tight text-white mb-2 flex items-center gap-2">
           <Sliders className="w-7 h-7 text-slate-500" />
-          General Preferences
+          {t.settings.title}
         </h1>
         <p className="text-sm text-slate-400 font-sans font-light">
-          Configure security bounds, comments moderation, UI scaling layout density, and visual highlight presets.
+          {t.settings.subtitle}
         </p>
       </div>
 
@@ -170,11 +172,11 @@ export default function SettingsView({
         <div className="rounded-2xl border border-slate-800 bg-slate-900/10 p-5 sm:p-6 text-left">
           <div className="flex gap-2 items-center mb-4">
             <Palette className="w-5 h-5 text-slate-500" />
-            <h3 className="text-sm font-semibold tracking-wide text-white">Interface Accent Matrix</h3>
+            <h3 className="text-sm font-semibold tracking-wide text-white">{t.settings.theme.title}</h3>
           </div>
-          
+
           <p className="text-xs text-slate-400 font-sans mb-5 leading-normal font-light">
-            Select an aesthetic signature wavelength to override borders, buttons, and visual focus states.
+            {t.settings.theme.subtitle}
           </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -205,17 +207,17 @@ export default function SettingsView({
 
         {/* Aspect 2: Operational switches */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/10 p-5 sm:p-6 text-left space-y-5">
-          <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block pl-1">Operational Switches</span>
+          <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block pl-1">{t.settings.switches.title}</span>
           
           {/* Notification Alert System */}
           <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-900">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <BellOff className="w-4 h-4 text-slate-500" />
-                <h4 className="text-xs font-semibold text-white tracking-tight">Deactivate Alert System</h4>
+                <h4 className="text-xs font-semibold text-white tracking-tight">{t.settings.switches.notifications.title}</h4>
               </div>
               <p className="text-[11px] text-slate-400 font-sans font-light leading-normal mt-1">
-                Completely disable unread counters and silence system update feeds.
+                {t.settings.switches.notifications.desc}
               </p>
             </div>
 
@@ -239,10 +241,10 @@ export default function SettingsView({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-slate-500" />
-                <h4 className="text-xs font-semibold text-white tracking-tight">Disable Comments Logging</h4>
+                <h4 className="text-xs font-semibold text-white tracking-tight">{t.settings.switches.comments.title}</h4>
               </div>
               <p className="text-[11px] text-slate-400 font-sans font-light leading-normal mt-1">
-                Prevents external reader profiles from appending commentary variables to published works.
+                {t.settings.switches.comments.desc}
               </p>
             </div>
 
@@ -266,10 +268,10 @@ export default function SettingsView({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <LayoutGrid className="w-4 h-4 text-slate-500" />
-                <h4 className="text-xs font-semibold text-white tracking-tight">Enforce High-Density Layout</h4>
+                <h4 className="text-xs font-semibold text-white tracking-tight">{t.settings.switches.density.title}</h4>
               </div>
               <p className="text-[11px] text-slate-400 font-sans font-light leading-normal mt-1">
-                Minimizes padding limits and displays developer telemetry markers on relevant screens.
+                {t.settings.switches.density.desc}
               </p>
             </div>
 
@@ -293,18 +295,18 @@ export default function SettingsView({
         <div className="rounded-2xl border border-red-500/20 bg-red-950/5 p-5 sm:p-6 text-left">
           <div className="flex gap-2 items-center mb-3">
             <RefreshCcw className="w-4 h-4 text-red-400" />
-            <h3 className="text-xs font-mono uppercase tracking-wider text-red-400">Initialize Cache Reset</h3>
+            <h3 className="text-xs font-mono uppercase tracking-wider text-red-400">{t.settings.reset.title}</h3>
           </div>
-          
+
           <p className="text-[11px] text-slate-400 font-sans leading-normal mb-5 font-light">
-            Deletes all custom notes composed in Notes Canvas, published items, and resets system parameters back to pre-saved factory default variables.
+            {t.settings.reset.desc}
           </p>
 
           <button
             onClick={handleReset}
             className="rounded-lg bg-red-600/10 hover:bg-red-600 border border-red-500/30 text-red-400 hover:text-white px-4 py-2 text-xs font-mono transition-colors cursor-pointer"
           >
-            Clear Caches and Restore Defaults
+            {t.settings.reset.button}
           </button>
         </div>
 
@@ -312,7 +314,7 @@ export default function SettingsView({
         <div className="flex gap-2 items-start text-left text-[11px] text-slate-500 pl-2">
           <Info className="w-4 h-4 text-slate-600 shrink-0 mt-0.5" />
           <span className="font-light">
-            Settings require no server reload. Variables synchronize into client local states instantaneously, guaranteeing secure local configurations.
+            {t.settings.info}
           </span>
         </div>
 

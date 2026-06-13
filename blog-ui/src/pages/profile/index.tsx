@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { UserProfile, BlogArticle, ActivePath, SystemSettings } from "../../types";
+import { useLanguage } from "../../context/LanguageContext";
 import { Edit3, Check, Github, Mail, FileText, Bookmark, Trash2, Globe, Eye, EyeOff, BookOpen, LogOut, Loader2, AlertCircle, X } from "lucide-react";
 
 interface ProfileProps {
@@ -40,6 +41,7 @@ export default function ProfileView({
   onLogout,
   onRegister,
 }: ProfileProps) {
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [newNickname, setNewNickname] = useState(profile.nickname || "");
   const [newName, setNewName] = useState(profile.name);
@@ -169,15 +171,13 @@ export default function ProfileView({
 
           <div className="text-center mb-8">
             <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block mb-1">
-              {authMode === "login" ? "Authorization Gateway" : "Create Account"}
+              {authMode === "login" ? t.profile.auth.title : t.profile.auth.title}
             </span>
             <h2 className="text-2xl font-bold font-heading text-white">
-              {authMode === "login" ? "Security Protocol Access" : "Register New User"}
+              {authMode === "login" ? t.profile.auth.title : t.profile.auth.title}
             </h2>
             <p className="text-xs text-slate-400 font-sans mt-1.5 leading-relaxed">
-              {authMode === "login"
-                ? "Verify credentials to personalize your system settings, publish layout documents, and comment on public streams."
-                : "Create a new account to get started."}
+              {authMode === "login" ? t.profile.auth.subtitle : t.profile.auth.subtitle}
             </p>
           </div>
 
@@ -195,7 +195,7 @@ export default function ProfileView({
                     }}
                     className="text-xs text-indigo-400 hover:underline mt-1 cursor-pointer"
                   >
-                    Don't have an account? Register now &rarr;
+                    {t.profile.auth.noAccount}
                   </button>
                 )}
               </div>
@@ -245,7 +245,7 @@ export default function ProfileView({
                 if (onRegister) {
                   const result = await onRegister(username, email || `${username}@example.com`, password);
                   if (result.success) {
-                    setAuthSuccess("Registration successful! You are now logged in.");
+                    setAuthSuccess(t.profile.auth.registerSuccess);
                     setPath("profile");
                   } else {
                     setAuthError(result.error || "Registration failed");
@@ -259,30 +259,30 @@ export default function ProfileView({
             }
           }} className="space-y-4">
             <div>
-              <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">Username</label>
+              <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.username}</label>
               <input
                 name="username"
                 type="text"
                 required
                 className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
-                placeholder="Enter username"
+                placeholder={t.profile.auth.username}
               />
             </div>
 
             {authMode === "register" && (
               <div>
-                <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">Email</label>
+                <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.email}</label>
                 <input
                   name="email"
                   type="email"
                   className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
-                  placeholder="Enter email (optional)"
+                  placeholder={t.profile.auth.email}
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">Password</label>
+              <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.password}</label>
               <div className="relative">
                 <input
                   name="password"
@@ -309,10 +309,10 @@ export default function ProfileView({
               {isLoggingIn ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  {authMode === "login" ? "Authenticating..." : "Creating Account..."}
+                  {authMode === "login" ? t.profile.auth.authenticating : t.profile.auth.creating}
                 </>
               ) : (
-                authMode === "login" ? "Sign-In and Mount Workspace" : "Create Account"
+                authMode === "login" ? t.profile.auth.loginBtn : t.profile.auth.registerBtn
               )}
             </button>
           </form>
@@ -328,7 +328,7 @@ export default function ProfileView({
                 }}
                 className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
               >
-                Don't have an account? Register &rarr;
+                {t.profile.auth.noAccount}
               </button>
             ) : (
               <button
@@ -339,7 +339,7 @@ export default function ProfileView({
                 }}
                 className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
               >
-                &larr; Back to Login
+                {t.profile.auth.backToLogin}
               </button>
             )}
           </div>
@@ -369,7 +369,7 @@ export default function ProfileView({
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">昵称 / Nickname</label>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">{t.profile.auth.username}</label>
                     <input
                       type="text"
                       className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold w-full"
@@ -379,7 +379,7 @@ export default function ProfileView({
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">用户名 / Username</label>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">{t.profile.auth.username}</label>
                     <input
                       type="text"
                       className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold w-full"
@@ -409,7 +409,7 @@ export default function ProfileView({
                     className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white rounded px-3 py-1 text-xs font-semibold cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    Apply Changes
+                    {t.profile.edit}
                   </button>
                   <button
                     onClick={() => {
@@ -421,7 +421,7 @@ export default function ProfileView({
                     }}
                     className="text-slate-500 hover:text-slate-300 rounded px-3 py-1 text-xs"
                   >
-                    Cancel
+                    {t.profile.cancel}
                   </button>
                 </div>
               </div>
@@ -430,7 +430,7 @@ export default function ProfileView({
                 <div className="flex flex-col sm:flex-row sm:items-center gap-x-3 gap-y-1">
                   <h2 className="text-xl sm:text-2xl font-bold font-heading text-white">{profile.name}</h2>
                   <span className="rounded bg-slate-950 border border-slate-850 px-2 py-0.5 text-[9px] font-mono text-slate-500 uppercase h-fit w-fit">
-                    Active cluster coordinator
+                    {t.profile.title}
                   </span>
                 </div>
                 <p className="text-xs font-mono text-indigo-400 mt-1">{profile.role}</p>
@@ -475,7 +475,7 @@ export default function ProfileView({
             }`}
           >
             <BookOpen className="w-4 h-4" />
-            Published Worksheets({userPublishedArticles.length})
+            {t.profile.published.replace("{count}", String(userPublishedArticles.length))}
           </button>
           <button
             onClick={() => setActiveTab("drafts")}
@@ -486,7 +486,7 @@ export default function ProfileView({
             }`}
           >
             <Bookmark className="w-4 h-4" />
-            Unpublished Drafts({simulatedDrafts.length})
+            {t.profile.drafts.replace("{count}", String(simulatedDrafts.length))}
           </button>
         </div>
 
@@ -503,7 +503,7 @@ export default function ProfileView({
           className="flex items-center gap-1 text-slate-500 hover:text-red-400 text-xs font-mono mb-2 cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5" />
-          Disconnect
+          {t.profile.disconnect}
         </button>
       </div>
 
@@ -512,12 +512,12 @@ export default function ProfileView({
         <div className="space-y-4" id="published-worksheet-stream">
           {userPublishedArticles.length === 0 ? (
             <div className="text-center rounded-xl border border-dashed border-slate-800 p-12 text-slate-600">
-              <span className="text-xs font-mono block">No documents written by your coordinator.</span>
+              <span className="text-xs font-mono block">{t.profile.noPublished}</span>
               <button
                 onClick={() => setPath("blog-compose")}
                 className="mt-4 inline-flex items-center gap-1.5 text-xs text-indigo-400 font-mono hover:underline cursor-pointer"
               >
-                Publish new blog now &rarr;
+                {t.profile.publishNew}
               </button>
             </div>
           ) : (
@@ -551,7 +551,7 @@ export default function ProfileView({
                     className="p-1.5 text-slate-400 hover:text-white bg-slate-950 rounded-lg border border-slate-850 flex items-center gap-1 text-xs font-mono cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    Read
+                    {t.profile.read}
                   </button>
                   <button
                     onClick={() => handleDeletePublished(art.id)}
@@ -569,7 +569,7 @@ export default function ProfileView({
         <div className="space-y-4" id="drafts-stream">
           {simulatedDrafts.length === 0 ? (
             <div className="text-center rounded-xl border border-dashed border-slate-800 p-12 text-slate-600">
-              <span className="text-xs font-mono">Draft collection is empty.</span>
+              <span className="text-xs font-mono">{t.profile.noDrafts}</span>
             </div>
           ) : (
             simulatedDrafts.map((draft) => (
@@ -584,7 +584,7 @@ export default function ProfileView({
                   <h3 className="text-sm font-semibold text-white mt-2 mb-1">
                     {draft.title}
                   </h3>
-                  <p className="text-xs text-slate-500 font-mono">Created {draft.date}</p>
+                  <p className="text-xs text-slate-500 font-mono">{t.profile.created.replace("{date}", draft.date)}</p>
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
@@ -592,7 +592,7 @@ export default function ProfileView({
                     onClick={() => handlePublishDraft(draft)}
                     className={`px-3 py-1.5 rounded-lg text-white font-mono text-xs cursor-pointer ${themeAccentColors[settings.themeAccent]}`}
                   >
-                    Instantly Publish
+                    {t.profile.instantPublish}
                   </button>
                   <button
                     onClick={() => handleDeleteDraft(draft.id)}

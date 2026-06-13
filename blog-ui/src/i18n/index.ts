@@ -241,11 +241,18 @@ export type TranslationKeys = {
     auth: {
       title: string;
       subtitle: string;
+      username: string;
       email: string;
       password: string;
       loginBtn: string;
+      registerBtn: string;
+      authenticating: string;
+      creating: string;
+      noAccount: string;
+      backToLogin: string;
       bypass: string;
       note: string;
+      registerSuccess: string;
     };
     title: string;
     published: string;

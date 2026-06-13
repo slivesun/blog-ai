@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { AppNotification, ActivePath, SystemSettings } from "../../types";
+import { useLanguage } from "../../context/LanguageContext";
 import { Bell, ShieldAlert, CheckCircle, MessageSquare, Trash2, ArrowRight, Loader2 } from "lucide-react";
 
 interface NotificationsProps {
@@ -28,6 +29,7 @@ export default function NotificationsView({
   onMarkAllAsRead,
   onDeleteNotification,
 }: NotificationsProps) {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClearAll = () => {
@@ -93,10 +95,10 @@ export default function NotificationsView({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-slate-800">
         <div>
           <h1 className="text-3xl font-heading font-extrabold tracking-tight text-white">
-            System Alerts & Updates
+            {t.notifications.title}
           </h1>
           <p className="text-sm text-slate-400 font-sans mt-1 font-light">
-            Keep track of cryptographic access, comment interactions, and cache synchronization events.
+            {t.notifications.subtitle}
           </p>
         </div>
 
@@ -110,17 +112,17 @@ export default function NotificationsView({
               {isLoading ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  Marking...
+                  ...
                 </>
               ) : (
-                'Mark read'
+                t.notifications.markRead
               )}
             </button>
             <button
               onClick={handleClearAll}
               className="text-xs font-mono text-slate-400 hover:text-red-400 px-3 py-1 bg-slate-900 rounded-lg border border-slate-850 cursor-pointer"
             >
-              Clear system
+              {t.notifications.clear}
             </button>
           </div>
         )}
@@ -131,7 +133,7 @@ export default function NotificationsView({
         {notifications.length === 0 ? (
           <div className="text-center rounded-2xl border border-dashed border-slate-800 py-16 text-slate-500">
             <Bell className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <span className="text-xs font-mono">No active alerts recorded in log stack.</span>
+            <span className="text-xs font-mono">{t.notifications.noAlerts}</span>
           </div>
         ) : (
           notifications.map((notif) => (
@@ -163,12 +165,12 @@ export default function NotificationsView({
                       onClick={() => handleActionClick(notif)}
                       className="text-xs font-mono text-indigo-400 hover:text-indigo-300 flex items-center gap-1 hover:underline cursor-pointer"
                     >
-                      Inspect linked worksheet
+                      {t.notifications.inspect}
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   ) : (
                     <span className="text-[9px] font-mono uppercase tracking-wider text-slate-600 selection:bg-transparent">
-                      Category // {notif.type}
+                      {t.notifications.category.replace("{type}", notif.type)}
                     </span>
                   )}
 
