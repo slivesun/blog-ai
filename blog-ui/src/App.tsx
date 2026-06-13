@@ -390,6 +390,12 @@ export default function App() {
       setNotesLoaded(false);
       setNotificationsLoaded(false);
       setProfileLoaded(true);
+      // 登录成功后跳回原页面
+      const redirect = localStorage.getItem('login_redirect');
+      if (redirect) {
+        localStorage.removeItem('login_redirect');
+        navigate(redirect);
+      }
       return { success: true };
     }
     return { success: false, error: response.message };
@@ -415,6 +421,12 @@ export default function App() {
       setProfile(transformedProfile);
       localStorage.setItem("portalcore_profile", JSON.stringify(transformedProfile));
       setProfileLoaded(true);
+      // 注册成功后跳回原页面
+      const redirect = localStorage.getItem('login_redirect');
+      if (redirect) {
+        localStorage.removeItem('login_redirect');
+        navigate(redirect);
+      }
       return { success: true };
     }
     return { success: false, error: response.message };

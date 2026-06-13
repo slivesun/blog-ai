@@ -55,6 +55,15 @@ async function request<T>(
 
     const data = await response.json();
 
+    if (response.status === 401) {
+      localStorage.removeItem('blog_access_token');
+      if (window.location.pathname !== '/profile') {
+        localStorage.setItem('login_redirect', window.location.pathname);
+        window.location.href = '/profile';
+      }
+      return { success: false, message: 'Unauthorized' };
+    }
+
     if (!response.ok) {
       return {
         success: false,
