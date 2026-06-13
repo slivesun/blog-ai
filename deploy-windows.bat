@@ -51,18 +51,88 @@ cd /d "%BLOG_DIR%\blog-ui"
 
 if not exist "node_modules" (
     echo   安装前端依赖...
-    call npm install
-    if errorlevel 1 (
-        echo [错误] npm install 失败
+    set "INSTALL_OK=0"
+
+    :: 方式1: npm install
+    call npm install >nul 2>&1
+    if not errorlevel 1 (
+        set "INSTALL_OK=1"
+        echo   [方式1] npm install 成功
+    )
+
+    :: 方式2: npm.cmd install（解决 call npm 路径问题）
+    if "%INSTALL_OK%"=="0" (
+        echo   [方式1] 失败，尝试 npm.cmd...
+        call npm.cmd install >nul 2>&1
+        if not errorlevel 1 (
+            set "INSTALL_OK=1"
+            echo   [方式2] npm.cmd install 成功
+        )
+    )
+
+    :: 方式3: node + npm-cli.js 直接执行
+    if "%INSTALL_OK%"=="0" (
+        echo   [方式2] 失败，尝试 node 直接执行 npm...
+        for /f "tokens=*" %%p in ('where npm 2^>nul') do set "NPM_PATH=%%p"
+        if defined NPM_PATH (
+            call node "%NPM_PATH%" install >nul 2>&1
+            if not errorlevel 1 (
+                set "INSTALL_OK=1"
+                echo   [方式3] node npm install 成功
+            )
+        )
+    )
+
+    if "%INSTALL_OK%"=="0" (
+        echo [错误] npm install 失败，所有方式均尝试过
         pause
         exit /b 1
     )
+    echo   依赖安装完成
 )
 
 echo   构建前端项目...
-call npm run build
-if errorlevel 1 (
-    echo [错误] 前端构建失败
+set "BUILD_OK=0"
+
+:: 方式1: npm run build
+call npm run build >nul 2>&1
+if not errorlevel 1 (
+    set "BUILD_OK=1"
+    echo   [方式1] npm run build 成功
+)
+
+:: 方式2: npx vite build
+if "%BUILD_OK%"=="0" (
+    echo   [方式1] npm run build 失败，尝试 npx...
+    call npx vite build >nul 2>&1
+    if not errorlevel 1 (
+        set "BUILD_OK=1"
+        echo   [方式2] npx vite build 成功
+    )
+)
+
+:: 方式3: 直接调用 node 执行 vite.js
+if "%BUILD_OK%"=="0" (
+    echo   [方式2] npx 失败，尝试 node 直接执行...
+    call node "%BLOG_DIR%\blog-ui\node_modules\vite\bin\vite.js" build >nul 2>&1
+    if not errorlevel 1 (
+        set "BUILD_OK=1"
+        echo   [方式3] node vite.js build 成功
+    )
+)
+
+:: 方式4: 直接调用 vite.cmd
+if "%BUILD_OK%"=="0" (
+    echo   [方式3] node 执行失败，尝试 vite.cmd...
+    call "%BLOG_DIR%\blog-ui\node_modules\.bin\vite.cmd" build >nul 2>&1
+    if not errorlevel 1 (
+        set "BUILD_OK=1"
+        echo   [方式4] vite.cmd build 成功
+    )
+)
+
+if "%BUILD_OK%"=="0" (
+    echo [错误] 前端构建失败，所有方式均尝试过
     pause
     exit /b 1
 )
@@ -85,12 +155,41 @@ if not exist "venv" (
 :: 激活虚拟环境并安装依赖
 call venv\Scripts\activate.bat
 echo   安装后端依赖...
-pip install -r requirements.txt -q
-if errorlevel 1 (
-    echo [错误] pip install 失败
+set "PIP_OK=0"
+
+:: 方式1: pip install
+pip install -r requirements.txt -q >nul 2>&1
+if not errorlevel 1 (
+    set "PIP_OK=1"
+    echo   [方式1] pip install 成功
+)
+
+:: 方式2: python -m pip install
+if "%PIP_OK%"=="0" (
+    echo   [方式1] 失败，尝试 python -m pip...
+    python -m pip install -r requirements.txt -q >nul 2>&1
+    if not errorlevel 1 (
+        set "PIP_OK=1"
+        echo   [方式2] python -m pip install 成功
+    )
+)
+
+:: 方式3: 使用 venv 中的 pip 完整路径
+if "%PIP_OK%"=="0" (
+    echo   [方式2] 失败，尝试 venv 内 pip 完整路径...
+    call "%BLOG_DIR%\blog-server\venv\Scripts\pip.exe" install -r requirements.txt -q >nul 2>&1
+    if not errorlevel 1 (
+        set "PIP_OK=1"
+        echo   [方式3] venv pip.exe 成功
+    )
+)
+
+if "%PIP_OK%"=="0" (
+    echo [错误] pip install 失败，所有方式均尝试过
     pause
     exit /b 1
 )
+echo   后端依赖安装完成
 
 :: 创建数据目录
 if not exist "data" mkdir data
@@ -99,8 +198,17 @@ if not exist "data" mkdir data
 if not exist ".env" (
     echo   生成环境配置...
 
-    :: 生成随机 SECRET_KEY
-    for /f "tokens=*" %%i in ('python -c "import secrets; print(secrets.token_hex(32))"') do set "SECRET_KEY=%%i"
+    :: 生成随机 SECRET_KEY（带兜底）
+    set "SECRET_KEY="
+    for /f "tokens=*" %%i in ('python -c "import secrets; print(secrets.token_hex(32))" 2^>nul') do set "SECRET_KEY=%%i"
+    if not defined SECRET_KEY (
+        echo   [警告] python 生成密钥失败，使用备用方式...
+        for /f "tokens=*" %%i in ('python3 -c "import secrets; print(secrets.token_hex(32))" 2^>nul') do set "SECRET_KEY=%%i"
+    )
+    if not defined SECRET_KEY (
+        :: 最终兜底：用 PowerShell 生成随机字符串
+        for /f "tokens=*" %%i in ('powershell -Command "[System.BitConverter]::ToString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).Replace('-','').ToLower()" 2^>nul') do set "SECRET_KEY=%%i"
+    )
 
     (
         echo SECRET_KEY=!SECRET_KEY!
@@ -124,6 +232,10 @@ echo.
 echo [4/6] 初始化数据库...
 
 python scripts\init_db.py 2>nul
+if errorlevel 1 (
+    echo   [警告] python 初始化失败，尝试 python3...
+    python3 scripts\init_db.py 2>nul
+)
 echo   数据库初始化完成
 
 :: ============================================
