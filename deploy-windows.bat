@@ -322,6 +322,7 @@ echo [6/6] 创建启动脚本...
     echo timeout /t 3 /nobreak ^>nul
     echo.
     echo echo [2] 启动 Nginx...
+    echo taskkill /F /IM nginx.exe 2^>nul
     echo cd /d "%NGINX_DIR%"
     echo start "Blog Nginx" nginx.exe
     echo.
