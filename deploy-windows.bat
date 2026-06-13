@@ -14,7 +14,7 @@ echo.
 set "BLOG_DIR=%~dp0"
 :: 去掉末尾的反斜杠
 if "%BLOG_DIR:~-1%"=="\" set "BLOG_DIR=%BLOG_DIR:~0,-1%"
-set "NGINX_DIR=C:\nginx"
+set "NGINX_DIR=C:\Users\Administrator\nginx-1.30.2"
 set "SERVER_IP=120.26.209.105"
 
 :: ============================================
@@ -274,12 +274,10 @@ echo   数据库初始化完成
 echo.
 echo [5/6] 配置 Nginx...
 
-if not exist "%NGINX_DIR%" (
+if not exist "%NGINX_DIR%\nginx.exe" (
     echo.
-    echo   [提示] 请手动安装 Nginx for Windows:
-    echo   1. 下载: http://nginx.org/en/download.html （选 Stable 版本）
-    echo   2. 解压到 %NGINX_DIR%
-    echo   3. 重新运行此脚本
+    echo   [提示] 未找到 Nginx，请确认路径: %NGINX_DIR%
+    echo   如已安装在其他位置，请修改脚本顶部的 NGINX_DIR 变量
     echo.
     pause
     exit /b 1
