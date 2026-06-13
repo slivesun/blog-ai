@@ -327,8 +327,8 @@ echo [6/6] 创建启动脚本...
     echo.
     echo echo ==========================================
     echo echo   启动完成！
-    echo echo   访问地址: http://%SERVER_IP%
-    echo echo   API 文档: http://%SERVER_IP%/docs
+    echo echo   访问地址 = http://%SERVER_IP%
+    echo echo   API 文档 = http://%SERVER_IP%/docs
     echo echo ==========================================
     echo echo.
     echo pause
