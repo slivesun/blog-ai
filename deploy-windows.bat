@@ -75,7 +75,7 @@ if not exist "node_modules" (
         echo   [方式2] 失败，尝试 node 直接执行 npm...
         for /f "tokens=*" %%p in ('where npm 2^>nul') do set "NPM_PATH=%%p"
         if defined NPM_PATH (
-            call node "%NPM_PATH%" install >nul 2>&1
+            call node "%NPM_PATH%" install
             if not errorlevel 1 (
                 set "INSTALL_OK=1"
                 echo   [方式3] node npm install 成功
@@ -95,7 +95,7 @@ echo   构建前端项目...
 set "BUILD_OK=0"
 
 :: 方式1: npm run build
-call npm run build >nul 2>&1
+call npm run build 2>nul
 if not errorlevel 1 (
     set "BUILD_OK=1"
     echo   [方式1] npm run build 成功
@@ -104,7 +104,7 @@ if not errorlevel 1 (
 :: 方式2: npx vite build
 if "%BUILD_OK%"=="0" (
     echo   [方式1] npm run build 失败，尝试 npx...
-    call npx vite build >nul 2>&1
+    call npx vite build 2>nul
     if not errorlevel 1 (
         set "BUILD_OK=1"
         echo   [方式2] npx vite build 成功
@@ -114,7 +114,7 @@ if "%BUILD_OK%"=="0" (
 :: 方式3: 直接调用 node 执行 vite.js
 if "%BUILD_OK%"=="0" (
     echo   [方式2] npx 失败，尝试 node 直接执行...
-    call node "%BLOG_DIR%\blog-ui\node_modules\vite\bin\vite.js" build >nul 2>&1
+    call node "%BLOG_DIR%\blog-ui\node_modules\vite\bin\vite.js" build
     if not errorlevel 1 (
         set "BUILD_OK=1"
         echo   [方式3] node vite.js build 成功
@@ -124,7 +124,7 @@ if "%BUILD_OK%"=="0" (
 :: 方式4: 直接调用 vite.cmd
 if "%BUILD_OK%"=="0" (
     echo   [方式3] node 执行失败，尝试 vite.cmd...
-    call "%BLOG_DIR%\blog-ui\node_modules\.bin\vite.cmd" build >nul 2>&1
+    call "%BLOG_DIR%\blog-ui\node_modules\.bin\vite.cmd" build
     if not errorlevel 1 (
         set "BUILD_OK=1"
         echo   [方式4] vite.cmd build 成功
@@ -150,42 +150,72 @@ cd /d "%BLOG_DIR%\blog-server"
 if not exist "venv" (
     echo   创建 Python 虚拟环境...
     python -m venv venv
+    if errorlevel 1 (
+        echo [错误] 创建虚拟环境失败
+        pause
+        exit /b 1
+    )
 )
 
-:: 激活虚拟环境并安装依赖
-call venv\Scripts\activate.bat
+:: 设置 venv 中 python/pip 的完整路径（避免依赖 activate）
+set "VENV_PYTHON=%BLOG_DIR%\blog-server\venv\Scripts\python.exe"
+set "VENV_PIP=%BLOG_DIR%\blog-server\venv\Scripts\pip.exe"
+
+:: 验证 venv 可用
+"%VENV_PYTHON%" --version >nul 2>&1
+if errorlevel 1 (
+    echo [错误] 虚拟环境 Python 不可用，删除重建...
+    rmdir /s /q venv
+    python -m venv venv
+)
+
 echo   安装后端依赖...
 set "PIP_OK=0"
 
-:: 方式1: pip install
-pip install -r requirements.txt -q >nul 2>&1
+:: 方式1: 直接用 venv pip.exe 完整路径（最可靠）
+"%VENV_PIP%" install -r requirements.txt -q
 if not errorlevel 1 (
     set "PIP_OK=1"
-    echo   [方式1] pip install 成功
+    echo   [方式1] venv pip.exe 成功
 )
 
-:: 方式2: python -m pip install
+:: 方式2: 用 venv python -m pip
 if "%PIP_OK%"=="0" (
     echo   [方式1] 失败，尝试 python -m pip...
-    python -m pip install -r requirements.txt -q >nul 2>&1
+    "%VENV_PYTHON%" -m pip install -r requirements.txt -q
     if not errorlevel 1 (
         set "PIP_OK=1"
-        echo   [方式2] python -m pip install 成功
+        echo   [方式2] python -m pip 成功
     )
 )
 
-:: 方式3: 使用 venv 中的 pip 完整路径
+:: 方式3: 先升级 pip 再重试
 if "%PIP_OK%"=="0" (
-    echo   [方式2] 失败，尝试 venv 内 pip 完整路径...
-    call "%BLOG_DIR%\blog-server\venv\Scripts\pip.exe" install -r requirements.txt -q >nul 2>&1
+    echo   [方式2] 失败，升级 pip 后重试...
+    "%VENV_PYTHON%" -m pip install --upgrade pip >nul 2>&1
+    "%VENV_PIP%" install -r requirements.txt -q
     if not errorlevel 1 (
         set "PIP_OK=1"
-        echo   [方式3] venv pip.exe 成功
+        echo   [方式3] 升级 pip 后成功
+    )
+)
+
+:: 方式4: 用全局 python 的 pip（最后兜底）
+if "%PIP_OK%"=="0" (
+    echo   [方式3] 失败，尝试全局 pip...
+    pip install -r requirements.txt -q
+    if not errorlevel 1 (
+        set "PIP_OK=1"
+        echo   [方式4] 全局 pip 成功
     )
 )
 
 if "%PIP_OK%"=="0" (
+    echo.
     echo [错误] pip install 失败，所有方式均尝试过
+    echo   请手动执行以下命令查看详细错误:
+    echo   cd %BLOG_DIR%\blog-server
+    echo   venv\Scripts\pip.exe install -r requirements.txt
     pause
     exit /b 1
 )
