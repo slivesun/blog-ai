@@ -10,8 +10,14 @@ from app.core.config import settings
 from app.api.v1.router import api_router
 from app.middleware.cors import configure_cors
 from app.middleware.logging import RequestLoggingMiddleware, ErrorHandlingMiddleware
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from loguru import logger
 import sys
+
+# 限流器：基于客户端 IP，全局默认 100次/分钟
+limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
 
 def setup_logging():
@@ -136,6 +142,20 @@ def create_app() -> FastAPI:
 
     # 配置CORS
     configure_cors(app)
+
+    # 配置限流
+    app.state.limiter = limiter
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+        return JSONResponse(
+            status_code=429,
+            content={
+                "success": False,
+                "message": "请求过于频繁，请稍后再试",
+                "detail": str(exc.detail)
+            }
+        )
 
     # 添加中间件
     app.add_middleware(ErrorHandlingMiddleware)

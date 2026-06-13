@@ -4,9 +4,11 @@
 """
 from datetime import datetime, timezone
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.db.session import get_db
 from app.models.user import User
@@ -23,13 +25,18 @@ from app.core.security import (
 from app.core.dependencies import get_current_user, get_current_active_user
 from app.core.config import settings
 
+# 登录接口限流器
+limiter = Limiter(key_func=get_remote_address)
+
 
 router = APIRouter()
 
 
 @router.post("/register", response_model=DataResponse[AuthResponse], status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/minute")
 async def register(
-    request: RegisterRequest,
+    request: Request,
+    register_data: RegisterRequest,
     db: Session = Depends(get_db)
 ):
     """
@@ -46,25 +53,25 @@ async def register(
         HTTPException: 用户名或邮箱已存在
     """
     # 检查用户名是否存在
-    if db.query(User).filter(User.username == request.username).first():
+    if db.query(User).filter(User.username == register_data.username).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already exists"
         )
 
     # 检查邮箱是否存在
-    if db.query(User).filter(User.email == request.email).first():
+    if db.query(User).filter(User.email == register_data.email).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
 
     # 创建用户
-    hashed_password = get_password_hash(request.password)
+    hashed_password = get_password_hash(register_data.password)
     user = User(
-        username=request.username,
-        nickname=request.username,
-        email=request.email,
+        username=register_data.username,
+        nickname=register_data.username,
+        email=register_data.email,
         hashed_password=hashed_password,
         full_name=request.username,
         role="user",
@@ -97,8 +104,10 @@ async def register(
 
 
 @router.post("/login", response_model=DataResponse[AuthResponse])
+@limiter.limit("5/minute")
 async def login(
-    request: LoginRequest,
+    request: Request,
+    login_data: LoginRequest,
     db: Session = Depends(get_db)
 ):
     """
@@ -116,7 +125,7 @@ async def login(
     """
     # 查找用户（支持用户名或邮箱）
     user = db.query(User).filter(
-        (User.username == request.username) | (User.email == request.username)
+        (User.username == login_data.username) | (User.email == login_data.username)
     ).first()
 
     if not user:
@@ -127,7 +136,7 @@ async def login(
         )
 
     # 验证密码
-    if not verify_password(request.password, user.hashed_password):
+    if not verify_password(login_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -162,7 +171,9 @@ async def login(
 
 
 @router.post("/login/form", response_model=DataResponse[AuthResponse])
+@limiter.limit("5/minute")
 async def login_form(
+    request: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db)
 ):

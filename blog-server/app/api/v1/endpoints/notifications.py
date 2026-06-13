@@ -3,7 +3,7 @@
 提供通知的CRUD操作
 """
 from typing import Annotated, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -65,28 +65,39 @@ async def create_notification(
 @router.get("", response_model=DataResponse[NotificationListResponse])
 async def get_notifications(
     current_user: Annotated[User, Depends(get_current_active_user)],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量")
 ):
     """
-    获取当前用户的通知列表
+    获取当前用户的通知列表（分页）
 
     参数:
-        db: 数据库会话
         current_user: 当前认证用户
+        db: 数据库会话
+        page: 页码（默认1）
+        page_size: 每页数量（默认20，最大100）
 
     返回:
         DataResponse: 通知列表
     """
-    notifications = db.query(Notification).filter(
+    query = db.query(Notification).filter(
         Notification.user_id == current_user.id
-    ).order_by(Notification.created_at.desc()).all()
+    )
 
-    unread_count = sum(1 for n in notifications if not n.is_read)
+    # 总数和未读数
+    total = query.count()
+    unread_count = query.filter(Notification.is_read == False).count()
+
+    # 分页查询
+    notifications = query.order_by(
+        Notification.created_at.desc()
+    ).offset((page - 1) * page_size).limit(page_size).all()
 
     return DataResponse(
         data=NotificationListResponse(
             notifications=[NotificationResponse.model_validate(n) for n in notifications],
-            total=len(notifications),
+            total=total,
             unread_count=unread_count
         )
     )

@@ -338,12 +338,17 @@ export const noteApi = {
 
 // 通知 API
 export const notificationApi = {
-  async getNotifications() {
+  async getNotifications(params?: { page?: number; page_size?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.set('page', String(params.page));
+    if (params?.page_size) searchParams.set('page_size', String(params.page_size));
+
+    const query = searchParams.toString();
     return request<{
       notifications: any[];
       total: number;
       unread_count: number;
-    }>('/notifications');
+    }>(`/notifications${query ? `?${query}` : ''}`);
   },
 
   async markAsRead(id: number) {
