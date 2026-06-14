@@ -8,8 +8,8 @@ export type TranslationKeys = {
     notes: string;
     journeyMapOn: string;
     journeyMapOff: string;
-    disconnect: string;
-    authenticate: string;
+    logout: string;
+    login: string;
     systemSettings: string;
   };
   footer: {
@@ -260,7 +260,7 @@ export type TranslationKeys = {
     title: string;
     published: string;
     drafts: string;
-    disconnect: string;
+    logout: string;
     noPublished: string;
     publishNew: string;
     noDrafts: string;

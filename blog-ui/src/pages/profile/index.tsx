@@ -503,7 +503,7 @@ export default function ProfileView({
           className="flex items-center gap-1 text-slate-500 hover:text-red-400 text-xs font-mono mb-2 cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5" />
-          {t.profile.disconnect}
+          {t.profile.logout}
         </button>
       </div>
 

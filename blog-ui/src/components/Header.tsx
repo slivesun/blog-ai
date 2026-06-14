@@ -186,14 +186,6 @@ export default function Header({
                   referrerPolicy="no-referrer"
                 />
               </Link>
-
-              <button
-                id="header-logout-btn"
-                onClick={handleLogout}
-                className="hidden lg:inline-flex items-center gap-1.5 rounded-lg border border-slate-800 hover:border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer font-mono"
-              >
-                {t.header.disconnect}
-              </button>
             </div>
           ) : (
             <Link
@@ -202,7 +194,7 @@ export default function Header({
               className={`flex items-center gap-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 text-sm font-medium text-white transition-all hover:scale-[1.01]`}
             >
               <LogIn className="w-4 h-4" />
-              {t.header.authenticate}
+              {t.header.login}
             </Link>
           )}
         </div>
