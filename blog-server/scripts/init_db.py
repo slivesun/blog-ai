@@ -199,13 +199,47 @@ In 2025, we see organizations moving away from perimeter-based security toward i
     print("Sample articles created successfully")
 
 
+def migrate_missing_columns(engine):
+    """
+    自动检测并添加缺失的列（轻量迁移，无需 Alembic）
+    对比模型定义与实际表结构，自动 ALTER TABLE ADD COLUMN
+    """
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(engine)
+
+    # 定义需要检查的表和列：(表名, 列名, 列类型, 默认值)
+    # 以后新增字段只需在此追加一行
+    expected_columns = [
+        ("user_settings", "skin", "VARCHAR(10)", "'dark'"),
+    ]
+
+    for table_name, col_name, col_type, default_val in expected_columns:
+        if table_name not in inspector.get_table_names():
+            continue  # 表还没创建，create_all 会处理
+        existing_cols = [c["name"] for c in inspector.get_columns(table_name)]
+        if col_name not in existing_cols:
+            try:
+                with engine.begin() as conn:
+                    conn.execute(text(
+                        f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type} DEFAULT {default_val}"
+                    ))
+                print(f"  迁移: {table_name}.{col_name} 列已添加")
+            except Exception as e:
+                print(f"  [警告] 添加 {table_name}.{col_name} 列失败: {e}")
+
+
 def main():
     """主函数"""
     print("Initializing database...")
 
-    # 初始化数据库表
+    # 初始化数据库表（只创建不存在的表）
     init_db()
     print("Database tables created")
+
+    # 自动迁移：添加模型新增但表中缺失的列
+    from app.db.session import engine
+    migrate_missing_columns(engine)
 
     # 创建会话
     db = SessionLocal()

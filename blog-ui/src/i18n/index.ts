@@ -204,6 +204,97 @@ export type TranslationKeys = {
         copyAll: string;
         copySuccess: string;
       };
+      codeBeautifier: {
+        label: string;
+        desc: string;
+        input: string;
+        output: string;
+        format: string;
+        minify: string;
+        placeholder: string;
+        empty: string;
+        copy: string;
+      };
+      baseConverter: {
+        label: string;
+        desc: string;
+        binary: string;
+        octal: string;
+        decimal: string;
+        hex: string;
+        placeholder: string;
+      };
+      timestamp: {
+        label: string;
+        desc: string;
+        unixLabel: string;
+        dateLabel: string;
+        getCurrent: string;
+        seconds: string;
+        milliseconds: string;
+        placeholder: string;
+      };
+      imageCompress: {
+        label: string;
+        desc: string;
+        upload: string;
+        quality: string;
+        maxWidth: string;
+        original: string;
+        compressed: string;
+        download: string;
+        noImage: string;
+      };
+      colorPicker: {
+        label: string;
+        desc: string;
+        hex: string;
+        rgb: string;
+        hsl: string;
+        preview: string;
+        copyHex: string;
+        copyRgb: string;
+        copyHsl: string;
+      };
+      textDiff: {
+        label: string;
+        desc: string;
+        original: string;
+        modified: string;
+        compare: string;
+        noDiff: string;
+        added: string;
+        removed: string;
+      };
+      charCounter: {
+        label: string;
+        desc: string;
+        chars: string;
+        charsNoSpace: string;
+        words: string;
+        lines: string;
+        paragraphs: string;
+        bytes: string;
+        placeholder: string;
+      };
+      qrCode: {
+        label: string;
+        desc: string;
+        input: string;
+        placeholder: string;
+        size: string;
+        download: string;
+      };
+      regexTester: {
+        label: string;
+        desc: string;
+        pattern: string;
+        flags: string;
+        testString: string;
+        matches: string;
+        noMatch: string;
+        matchCount: string;
+      };
     };
     copied: string;
     console: string;
@@ -295,6 +386,12 @@ export type TranslationKeys = {
       violet: string;
       amber: string;
       emerald: string;
+    };
+    skin: {
+      title: string;
+      dark: string;
+      light: string;
+      success: string;
     };
     switches: {
       title: string;

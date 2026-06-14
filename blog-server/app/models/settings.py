@@ -22,6 +22,7 @@ class UserSettings(Base):
     theme_accent = Column(String(20), default="cyan", comment="主题色: cyan/violet/amber/emerald")
     high_density_layout = Column(Boolean, default=False, comment="高密度布局")
     language = Column(String(10), default="zh", comment="语言: zh/en")
+    skin = Column(String(10), default="dark", comment="皮肤: dark/light")
     created_at = Column(DateTime, default=utcnow, comment="创建时间")
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, comment="更新时间")
 

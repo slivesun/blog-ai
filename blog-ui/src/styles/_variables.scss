@@ -2,6 +2,35 @@
 // Variables & Theme Configuration
 // ============================
 
+// Skin Theme CSS Variables
+:root {
+  --c-bg-page: #0a0a0f;
+  --c-bg-card: #111118;
+  --c-bg-card-hover: #16161d;
+  --c-bg-input: #0a0a0f;
+  --c-border: #1e1e28;
+  --c-border-hover: #333342;
+  --c-text-primary: #f5f5f8;
+  --c-text-secondary: #c5c5d0;
+  --c-text-muted: #6b6b7d;
+  --c-text-placeholder: #4a4a5c;
+  --c-scrollbar-thumb: #333342;
+}
+
+body.skin-light {
+  --c-bg-page: #f8f9fa;
+  --c-bg-card: #ffffff;
+  --c-bg-card-hover: #f1f3f5;
+  --c-bg-input: #f1f3f5;
+  --c-border: #e2e8f0;
+  --c-border-hover: #cbd5e1;
+  --c-text-primary: #1e293b;
+  --c-text-secondary: #475569;
+  --c-text-muted: #94a3b8;
+  --c-text-placeholder: #94a3b8;
+  --c-scrollbar-thumb: #cbd5e1;
+}
+
 // Colors
 $slate-950: #0a0a0f;
 $slate-900: #111118;

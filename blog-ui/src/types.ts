@@ -65,6 +65,7 @@ export interface SystemSettings {
   allowComments: boolean;
   themeAccent: "cyan" | "violet" | "amber" | "emerald";
   highDensityLayout: boolean;
+  skin: "dark" | "light";
 }
 
 export type ActivePath = "home" | "blog" | "blog-detail" | "blog-compose" | "dev-tools" | "notes" | "profile" | "notifications" | "settings";

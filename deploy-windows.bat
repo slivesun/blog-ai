@@ -13,7 +13,7 @@ echo.
 :: 自动获取脚本所在目录（即项目根目录）
 set "BLOG_DIR=%~dp0"
 :: 去掉末尾的反斜杠
-if "%BLOG_DIR:~-1%"=="\" set "BLOG_DIR=%BLOG_DIR:~0,-1%"
+if "!BLOG_DIR:~-1!"=="\" set "BLOG_DIR=!BLOG_DIR:~0,-1!"
 set "NGINX_DIR=C:\Users\Administrator\nginx-1.30.2"
 set "SERVER_IP=120.26.209.105"
 
@@ -23,7 +23,7 @@ set "SERVER_IP=120.26.209.105"
 echo.
 echo [1/7] 拉取最新代码...
 
-cd /d "%BLOG_DIR%"
+cd /d "!BLOG_DIR!"
 
 :: 检查是否为 git 仓库
 if not exist ".git" (
@@ -38,10 +38,10 @@ if not defined CURRENT_BRANCH (
     goto :after_git_pull
 )
 
-echo   当前分支: %CURRENT_BRANCH%
+echo   当前分支: !CURRENT_BRANCH!
 
-:: 拉取最新代码
-git pull origin %CURRENT_BRANCH% >nul 2>&1
+:: 拉取最新代码（显示输出便于诊断）
+git pull origin !CURRENT_BRANCH!
 if errorlevel 1 (
     echo   [警告] git pull 失败，继续使用本地代码
 ) else (
@@ -81,7 +81,7 @@ echo   Node.js: OK
 echo.
 echo [3/7] 构建前端...
 
-cd /d "%BLOG_DIR%\blog-ui"
+cd /d "!BLOG_DIR!\blog-ui"
 
 if not exist "node_modules" (
     echo   安装前端依赖...
@@ -94,8 +94,8 @@ if not exist "node_modules" (
         echo   [方式1] npm install 成功
     )
 
-    :: 方式2: npm.cmd install（解决 call npm 路径问题）
-    if "%INSTALL_OK%"=="0" (
+    :: 方式2: npm.cmd install
+    if "!INSTALL_OK!"=="0" (
         echo   [方式1] 失败，尝试 npm.cmd...
         call npm.cmd install >nul 2>&1
         if not errorlevel 1 (
@@ -105,11 +105,11 @@ if not exist "node_modules" (
     )
 
     :: 方式3: node + npm-cli.js 直接执行
-    if "%INSTALL_OK%"=="0" (
+    if "!INSTALL_OK!"=="0" (
         echo   [方式2] 失败，尝试 node 直接执行 npm...
         for /f "tokens=*" %%p in ('where npm 2^>nul') do set "NPM_PATH=%%p"
         if defined NPM_PATH (
-            call node "%NPM_PATH%" install
+            call node "!NPM_PATH!" install
             if not errorlevel 1 (
                 set "INSTALL_OK=1"
                 echo   [方式3] node npm install 成功
@@ -117,7 +117,7 @@ if not exist "node_modules" (
         )
     )
 
-    if "%INSTALL_OK%"=="0" (
+    if "!INSTALL_OK!"=="0" (
         echo [错误] npm install 失败，所有方式均尝试过
         pause
         exit /b 1
@@ -136,7 +136,7 @@ if not errorlevel 1 (
 )
 
 :: 方式2: npx vite build
-if "%BUILD_OK%"=="0" (
+if "!BUILD_OK!"=="0" (
     echo   [方式1] npm run build 失败，尝试 npx...
     call npx vite build 2>nul
     if not errorlevel 1 (
@@ -146,9 +146,9 @@ if "%BUILD_OK%"=="0" (
 )
 
 :: 方式3: 直接调用 node 执行 vite.js
-if "%BUILD_OK%"=="0" (
+if "!BUILD_OK!"=="0" (
     echo   [方式2] npx 失败，尝试 node 直接执行...
-    call node "%BLOG_DIR%\blog-ui\node_modules\vite\bin\vite.js" build
+    call node "!BLOG_DIR!\blog-ui\node_modules\vite\bin\vite.js" build
     if not errorlevel 1 (
         set "BUILD_OK=1"
         echo   [方式3] node vite.js build 成功
@@ -156,16 +156,16 @@ if "%BUILD_OK%"=="0" (
 )
 
 :: 方式4: 直接调用 vite.cmd
-if "%BUILD_OK%"=="0" (
+if "!BUILD_OK!"=="0" (
     echo   [方式3] node 执行失败，尝试 vite.cmd...
-    call "%BLOG_DIR%\blog-ui\node_modules\.bin\vite.cmd" build
+    call "!BLOG_DIR!\blog-ui\node_modules\.bin\vite.cmd" build
     if not errorlevel 1 (
         set "BUILD_OK=1"
         echo   [方式4] vite.cmd build 成功
     )
 )
 
-if "%BUILD_OK%"=="0" (
+if "!BUILD_OK!"=="0" (
     echo [错误] 前端构建失败，所有方式均尝试过
     pause
     exit /b 1
@@ -178,7 +178,7 @@ echo   前端构建完成: dist\
 echo.
 echo [4/7] 配置后端...
 
-cd /d "%BLOG_DIR%\blog-server"
+cd /d "!BLOG_DIR!\blog-server"
 
 :: 创建虚拟环境
 if not exist "venv" (
@@ -192,11 +192,11 @@ if not exist "venv" (
 )
 
 :: 设置 venv 中 python/pip 的完整路径（避免依赖 activate）
-set "VENV_PYTHON=%BLOG_DIR%\blog-server\venv\Scripts\python.exe"
-set "VENV_PIP=%BLOG_DIR%\blog-server\venv\Scripts\pip.exe"
+set "VENV_PYTHON=!BLOG_DIR!\blog-server\venv\Scripts\python.exe"
+set "VENV_PIP=!BLOG_DIR!\blog-server\venv\Scripts\pip.exe"
 
 :: 验证 venv 可用
-"%VENV_PYTHON%" --version >nul 2>&1
+"!VENV_PYTHON!" --version >nul 2>&1
 if errorlevel 1 (
     echo [错误] 虚拟环境 Python 不可用，删除重建...
     rmdir /s /q venv
@@ -207,16 +207,16 @@ echo   安装后端依赖...
 set "PIP_OK=0"
 
 :: 方式1: 直接用 venv pip.exe 完整路径（最可靠）
-"%VENV_PIP%" install -r requirements.txt -q
+"!VENV_PIP!" install -r requirements.txt -q
 if not errorlevel 1 (
     set "PIP_OK=1"
     echo   [方式1] venv pip.exe 成功
 )
 
 :: 方式2: 用 venv python -m pip
-if "%PIP_OK%"=="0" (
+if "!PIP_OK!"=="0" (
     echo   [方式1] 失败，尝试 python -m pip...
-    "%VENV_PYTHON%" -m pip install -r requirements.txt -q
+    "!VENV_PYTHON!" -m pip install -r requirements.txt -q
     if not errorlevel 1 (
         set "PIP_OK=1"
         echo   [方式2] python -m pip 成功
@@ -224,10 +224,10 @@ if "%PIP_OK%"=="0" (
 )
 
 :: 方式3: 先升级 pip 再重试
-if "%PIP_OK%"=="0" (
+if "!PIP_OK!"=="0" (
     echo   [方式2] 失败，升级 pip 后重试...
-    "%VENV_PYTHON%" -m pip install --upgrade pip >nul 2>&1
-    "%VENV_PIP%" install -r requirements.txt -q
+    "!VENV_PYTHON!" -m pip install --upgrade pip >nul 2>&1
+    "!VENV_PIP!" install -r requirements.txt -q
     if not errorlevel 1 (
         set "PIP_OK=1"
         echo   [方式3] 升级 pip 后成功
@@ -235,7 +235,7 @@ if "%PIP_OK%"=="0" (
 )
 
 :: 方式4: 用全局 python 的 pip（最后兜底）
-if "%PIP_OK%"=="0" (
+if "!PIP_OK!"=="0" (
     echo   [方式3] 失败，尝试全局 pip...
     pip install -r requirements.txt -q
     if not errorlevel 1 (
@@ -244,11 +244,11 @@ if "%PIP_OK%"=="0" (
     )
 )
 
-if "%PIP_OK%"=="0" (
+if "!PIP_OK!"=="0" (
     echo.
     echo [错误] pip install 失败，所有方式均尝试过
     echo   请手动执行以下命令查看详细错误:
-    echo   cd %BLOG_DIR%\blog-server
+    echo   cd !BLOG_DIR!\blog-server
     echo   venv\Scripts\pip.exe install -r requirements.txt
     pause
     exit /b 1
@@ -276,7 +276,7 @@ if not exist ".env" (
 
     (
         echo SECRET_KEY=!SECRET_KEY!
-        echo CORS_ORIGINS=http://%SERVER_IP%
+        echo CORS_ORIGINS=http://!SERVER_IP!
         echo VITE_API_BASE_URL=/api/v1
         echo DATABASE_URL=sqlite:///./data/blog.db
         echo ENVIRONMENT=production
@@ -293,14 +293,23 @@ if not exist ".env" (
 :: 第五步：初始化数据库
 :: ============================================
 echo.
-echo [5/7] 初始化数据库...
+echo [5/7] 数据库...
 
-python scripts\init_db.py 2>nul
-if errorlevel 1 (
-    echo   [警告] python 初始化失败，尝试 python3...
-    python3 scripts\init_db.py 2>nul
+set /p "RUN_DB_INIT=  是否执行数据库初始化/迁移？（新增字段时需要）[y/N]: "
+if /i "!RUN_DB_INIT!"=="y" (
+    "!VENV_PYTHON!" scripts\init_db.py
+    if errorlevel 1 (
+        echo   [警告] venv python 初始化失败，尝试系统 python...
+        python scripts\init_db.py
+        if errorlevel 1 (
+            echo   [警告] python 初始化失败，尝试 python3...
+            python3 scripts\init_db.py
+        )
+    )
+    echo   数据库初始化完成
+) else (
+    echo   跳过数据库初始化
 )
-echo   数据库初始化完成
 
 :: ============================================
 :: 第六步：配置 Nginx
@@ -308,9 +317,9 @@ echo   数据库初始化完成
 echo.
 echo [6/7] 配置 Nginx...
 
-if not exist "%NGINX_DIR%\nginx.exe" (
+if not exist "!NGINX_DIR!\nginx.exe" (
     echo.
-    echo   [提示] 未找到 Nginx，请确认路径: %NGINX_DIR%
+    echo   [提示] 未找到 Nginx，请确认路径: !NGINX_DIR!
     echo   如已安装在其他位置，请修改脚本顶部的 NGINX_DIR 变量
     echo.
     pause
@@ -318,11 +327,11 @@ if not exist "%NGINX_DIR%\nginx.exe" (
 )
 
 :: 复制前端文件到 nginx html 目录
-if exist "%NGINX_DIR%\html" rmdir /s /q "%NGINX_DIR%\html"
-xcopy /E /I /Q "%BLOG_DIR%\blog-ui\dist\*" "%NGINX_DIR%\html\" >nul
+if exist "!NGINX_DIR!\html" rmdir /s /q "!NGINX_DIR!\html"
+xcopy /E /I /Q "!BLOG_DIR!\blog-ui\dist\*" "!NGINX_DIR!\html\" >nul
 
 :: 复制 nginx 配置
-copy /Y "%BLOG_DIR%\nginx-windows.conf" "%NGINX_DIR%\conf\nginx.conf" >nul
+copy /Y "!BLOG_DIR!\nginx-windows.conf" "!NGINX_DIR!\conf\nginx.conf" >nul
 echo   Nginx 配置完成
 
 :: ============================================
@@ -335,56 +344,54 @@ echo [7/7] 创建启动脚本...
 (
     echo @echo off
     echo chcp 65001 ^>nul
-    echo cd /d "%BLOG_DIR%\blog-server"
+    echo cd /d "!BLOG_DIR!\blog-server"
     echo call venv\Scripts\activate.bat
     echo echo 启动 Blog 后端服务...
     echo uvicorn app.main:app --host 0.0.0.0 --port 8000
     echo pause
-) > "%BLOG_DIR%\start-backend.bat"
+) > "!BLOG_DIR!\start-backend.bat"
 
-:: 创建一键启动脚本
-(
-    echo @echo off
-    echo chcp 65001 ^>nul
-    echo echo ==========================================
-    echo echo   Blog 博客系统 - 启动
-    echo echo ==========================================
-    echo echo.
-    echo.
+:: 创建一键启动脚本（使用临时文件方式避免特殊字符问题）
+set "START_SCRIPT=!BLOG_DIR!\start-blog.bat"
 
-    echo echo [1] 检查后端口占用...
-    echo for /f "tokens=5" %%%%p in \('netstat -ano ^| findstr ":8000" ^| findstr LISTENING'\) do (
-    echo     echo   发现端口 8000 被 PID %%%%p 占用，准备结束...
-    echo     taskkill /F /PID %%%%p ^>nul 2^>^&1
-    echo )
-    echo.
-
-    echo echo [2] 检查并重启后端服务...
-    echo tasklist ^| findstr /I "uvicorn.exe" ^>nul 2^>^&1
-    echo if not errorlevel 1 (
-    echo     echo   发现已有 uvicorn 进程运行，正在结束...
-    echo     taskkill /F /IM uvicorn.exe ^>nul 2^>^&1
-    echo     timeout /t 2 /nobreak ^>nul
-    echo     echo   旧进程已结束，重新启动后端...
-    echo \) else (
-    echo     echo   未发现运行中的后端进程，启动后端...
-    echo \)
-    echo start "Blog Backend" cmd /c "%BLOG_DIR%\start-backend.bat"
-    echo timeout /t 3 /nobreak ^>nul
-    echo.
-    echo echo [3] 启动 Nginx...
-    echo taskkill /F /IM nginx.exe 2^>nul
-    echo cd /d "%NGINX_DIR%"
-    echo start "Blog Nginx" nginx.exe
-    echo.
-    echo echo ==========================================
-    echo echo   启动完成！
-    echo echo   访问地址 = http://%SERVER_IP%
-    echo echo   API 文档 = http://%SERVER_IP%/docs
-    echo echo ==========================================
-    echo echo.
-    echo pause
-) > "%BLOG_DIR%\start-blog.bat"
+> "!START_SCRIPT!" echo @echo off
+>> "!START_SCRIPT!" echo chcp 65001 ^>nul
+>> "!START_SCRIPT!" echo echo ==========================================
+>> "!START_SCRIPT!" echo echo   Blog 博客系统 - 启动
+>> "!START_SCRIPT!" echo echo ==========================================
+>> "!START_SCRIPT!" echo echo.
+>> "!START_SCRIPT!" echo.
+>> "!START_SCRIPT!" echo echo [1] 检查后端端口占用...
+>> "!START_SCRIPT!" echo for /f "tokens=5" %%%%p in ^('netstat -ano ^^^| findstr ":8000" ^^^| findstr LISTENING'^) do ^(
+>> "!START_SCRIPT!" echo     echo   发现端口 8000 被 PID %%%%p 占用，准备结束...
+>> "!START_SCRIPT!" echo     taskkill /F /PID %%%%p ^>nul 2^>^&1
+>> "!START_SCRIPT!" echo ^)
+>> "!START_SCRIPT!" echo.
+>> "!START_SCRIPT!" echo echo [2] 检查并重启后端服务...
+>> "!START_SCRIPT!" echo tasklist ^^^| findstr /I "uvicorn.exe" ^>nul 2^>^&1
+>> "!START_SCRIPT!" echo if not errorlevel 1 ^(
+>> "!START_SCRIPT!" echo     echo   发现已有 uvicorn 进程运行，正在结束...
+>> "!START_SCRIPT!" echo     taskkill /F /IM uvicorn.exe ^>nul 2^>^&1
+>> "!START_SCRIPT!" echo     timeout /t 2 /nobreak ^>nul
+>> "!START_SCRIPT!" echo     echo   旧进程已结束，重新启动后端...
+>> "!START_SCRIPT!" echo ^) else ^(
+>> "!START_SCRIPT!" echo     echo   未发现运行中的后端进程，启动后端...
+>> "!START_SCRIPT!" echo ^)
+>> "!START_SCRIPT!" echo start "Blog Backend" cmd /c "!BLOG_DIR!\start-backend.bat"
+>> "!START_SCRIPT!" echo timeout /t 3 /nobreak ^>nul
+>> "!START_SCRIPT!" echo.
+>> "!START_SCRIPT!" echo echo [3] 启动 Nginx...
+>> "!START_SCRIPT!" echo taskkill /F /IM nginx.exe 2^>nul
+>> "!START_SCRIPT!" echo cd /d "!NGINX_DIR!"
+>> "!START_SCRIPT!" echo start "Blog Nginx" nginx.exe
+>> "!START_SCRIPT!" echo.
+>> "!START_SCRIPT!" echo echo ==========================================
+>> "!START_SCRIPT!" echo echo   启动完成！
+>> "!START_SCRIPT!" echo echo   访问地址 = http://!SERVER_IP!
+>> "!START_SCRIPT!" echo echo   API 文档 = http://!SERVER_IP!/docs
+>> "!START_SCRIPT!" echo echo ==========================================
+>> "!START_SCRIPT!" echo echo.
+>> "!START_SCRIPT!" echo pause
 
 echo   启动脚本已创建
 
@@ -398,15 +405,15 @@ echo ==========================================
 echo.
 echo   后续步骤:
 echo   1. 下载安装 Nginx: http://nginx.org/en/download.html
-echo      解压到 %NGINX_DIR%
-echo   2. 运行 %BLOG_DIR%\start-blog.bat 启动服务
+echo      解压到 !NGINX_DIR!
+echo   2. 运行 !BLOG_DIR!\start-blog.bat 启动服务
 echo   3. 阿里云安全组开放 80 端口
-echo   4. 访问 http://%SERVER_IP%
+echo   4. 访问 http://!SERVER_IP!
 echo.
 echo   文件位置:
-echo     项目目录: %BLOG_DIR%
-echo     后端:     %BLOG_DIR%\blog-server
-echo     前端构建: %BLOG_DIR%\blog-ui\dist
-echo     Nginx:    %NGINX_DIR%
+echo     项目目录: !BLOG_DIR!
+echo     后端:     !BLOG_DIR!\blog-server
+echo     前端构建: !BLOG_DIR!\blog-ui\dist
+echo     Nginx:    !NGINX_DIR!
 echo.
 pause

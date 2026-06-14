@@ -91,6 +91,7 @@ export default function App() {
       allowComments: true,
       themeAccent: "cyan",
       highDensityLayout: false,
+      skin: "dark",
     };
   });
 
@@ -202,9 +203,10 @@ export default function App() {
     }
   }, [currentPath, profileLoaded, notesLoaded, notificationsLoaded]);
 
-  // Sync settings to localStorage
+  // Sync settings to localStorage and apply skin class
   useEffect(() => {
     localStorage.setItem("portalcore_settings", JSON.stringify(settings));
+    document.body.classList.toggle("skin-light", settings.skin === "light");
   }, [settings]);
 
   // Reset defaults
@@ -221,6 +223,7 @@ export default function App() {
       allowComments: true,
       themeAccent: "cyan",
       highDensityLayout: false,
+      skin: "dark",
     });
     setPrototypeMode(false);
     setSelectedArticleId(null);

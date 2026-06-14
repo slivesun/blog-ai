@@ -75,6 +75,7 @@ class UserSettingsBase(BaseModel):
     theme_accent: str = Field(default="cyan", pattern="^(cyan|violet|amber|emerald)$")
     high_density_layout: bool = False
     language: str = Field(default="zh", pattern="^(zh|en)$")
+    skin: str = Field(default="dark", pattern="^(dark|light)$")
 
 
 class UserSettingsUpdate(UserSettingsBase):

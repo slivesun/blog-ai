@@ -47,7 +47,7 @@ export function transformNote(apiNote: any): SystemNote {
       tags = apiNote.tags;
     }
   }
-  
+
   return {
     id: String(apiNote.id),
     title: apiNote.title,
@@ -92,7 +92,8 @@ export function transformSettings(apiSettings: any): SystemSettings {
     allowNotifications: apiSettings.allow_notifications ?? true,
     allowComments: apiSettings.allow_comments ?? true,
     themeAccent: apiSettings.theme_accent || "cyan",
-    highDensityLayout: apiSettings.high_density_layout || false
+    highDensityLayout: apiSettings.high_density_layout || false,
+    skin: apiSettings.skin || "dark"
   };
 }
 

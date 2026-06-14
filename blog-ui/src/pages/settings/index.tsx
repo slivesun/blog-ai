@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SystemSettings, ActivePath } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
-import { Sliders, BellOff, MessageSquare, Palette, RefreshCcw, CheckCircle, Info, LayoutGrid, Loader2 } from "lucide-react";
+import { Sliders, BellOff, MessageSquare, Palette, RefreshCcw, CheckCircle, Info, LayoutGrid, Loader2, Sun, Moon } from "lucide-react";
 
 interface SettingsProps {
   settings: SystemSettings;
@@ -123,6 +123,24 @@ export default function SettingsView({
     }
   };
 
+  const setSkin = async (skin: "dark" | "light") => {
+    setIsSaving(true);
+    try {
+      if (onUpdateSettings) {
+        const result = await onUpdateSettings({ skin });
+        if (result.success) {
+          setSettings((prev) => ({ ...prev, skin }));
+          triggerFeedback(t.settings.skin.success.replace("{skin}", skin === "dark" ? t.settings.skin.dark : t.settings.skin.light));
+        }
+      } else {
+        setSettings((prev) => ({ ...prev, skin }));
+        triggerFeedback(t.settings.skin.success.replace("{skin}", skin === "dark" ? t.settings.skin.dark : t.settings.skin.light));
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const navigate = useNavigate();
 
   const handleReset = () => {
@@ -202,6 +220,60 @@ export default function SettingsView({
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Skin toggle */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/10 p-5 sm:p-6 text-left">
+          <div className="flex gap-2 items-center mb-4">
+            {settings.skin === "light" ? <Sun className="w-5 h-5 text-slate-500" /> : <Moon className="w-5 h-5 text-slate-500" />}
+            <h3 className="text-sm font-semibold tracking-wide text-white">{t.settings.skin.title}</h3>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setSkin("dark")}
+              disabled={isSaving}
+              className={`rounded-xl border p-4 text-center cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                settings.skin === "dark"
+                  ? "border-slate-600 bg-slate-950 shadow-md scale-[1.02] ring-1 ring-slate-700"
+                  : "border-slate-850 bg-slate-900/10 hover:border-slate-805 hover:bg-slate-900/40"
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Moon className="w-5 h-5 text-slate-400" />
+                <span className={`text-xs font-mono font-medium ${settings.skin === "dark" ? "text-white" : "text-slate-400"}`}>
+                  {t.settings.skin.dark}
+                </span>
+                <div className="flex gap-1 mt-1">
+                  <div className="w-4 h-4 rounded bg-slate-950 border border-slate-800" />
+                  <div className="w-4 h-4 rounded bg-slate-900 border border-slate-800" />
+                  <div className="w-4 h-4 rounded bg-slate-800 border border-slate-700" />
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setSkin("light")}
+              disabled={isSaving}
+              className={`rounded-xl border p-4 text-center cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                settings.skin === "light"
+                  ? "border-slate-400 bg-white shadow-md scale-[1.02] ring-1 ring-slate-300"
+                  : "border-slate-850 bg-slate-900/10 hover:border-slate-805 hover:bg-slate-900/40"
+              }`}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Sun className="w-5 h-5 text-amber-400" />
+                <span className={`text-xs font-mono font-medium ${settings.skin === "light" ? "text-slate-800" : "text-slate-400"}`}>
+                  {t.settings.skin.light}
+                </span>
+                <div className="flex gap-1 mt-1">
+                  <div className="w-4 h-4 rounded bg-gray-50 border border-gray-200" />
+                  <div className="w-4 h-4 rounded bg-white border border-gray-200" />
+                  <div className="w-4 h-4 rounded bg-gray-100 border border-gray-200" />
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 
