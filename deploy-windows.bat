@@ -13,7 +13,8 @@ echo.
 :: 自动获取脚本所在目录（即项目根目录）
 set "BLOG_DIR=%~dp0"
 :: 去掉末尾的反斜杠
-if "!BLOG_DIR:~-1!"=="\" set "BLOG_DIR=!BLOG_DIR:~0,-1!"
+set "_LAST=!BLOG_DIR:~-1!"
+if "!_LAST!"=="\" set "BLOG_DIR=!BLOG_DIR:~0,-1!"
 set "NGINX_DIR=C:\Users\Administrator\nginx-1.30.2"
 set "SERVER_IP=120.26.209.105"
 
@@ -83,47 +84,45 @@ echo [3/7] 构建前端...
 
 cd /d "!BLOG_DIR!\blog-ui"
 
-if not exist "node_modules" (
-    echo   安装前端依赖...
-    set "INSTALL_OK=0"
+echo   安装/更新前端依赖...
+set "INSTALL_OK=0"
 
-    :: 方式1: npm install
-    call npm install >nul 2>&1
+:: 方式1: npm install
+call npm install >nul 2>&1
+if not errorlevel 1 (
+    set "INSTALL_OK=1"
+    echo   [方式1] npm install 成功
+)
+
+:: 方式2: npm.cmd install
+if "!INSTALL_OK!"=="0" (
+    echo   [方式1] 失败，尝试 npm.cmd...
+    call npm.cmd install >nul 2>&1
     if not errorlevel 1 (
         set "INSTALL_OK=1"
-        echo   [方式1] npm install 成功
+        echo   [方式2] npm.cmd install 成功
     )
+)
 
-    :: 方式2: npm.cmd install
-    if "!INSTALL_OK!"=="0" (
-        echo   [方式1] 失败，尝试 npm.cmd...
-        call npm.cmd install >nul 2>&1
+:: 方式3: node + npm-cli.js 直接执行
+if "!INSTALL_OK!"=="0" (
+    echo   [方式2] 失败，尝试 node 直接执行 npm...
+    for /f "tokens=*" %%p in ('where npm 2^>nul') do set "NPM_PATH=%%p"
+    if defined NPM_PATH (
+        call node "!NPM_PATH!" install
         if not errorlevel 1 (
             set "INSTALL_OK=1"
-            echo   [方式2] npm.cmd install 成功
+            echo   [方式3] node npm install 成功
         )
     )
-
-    :: 方式3: node + npm-cli.js 直接执行
-    if "!INSTALL_OK!"=="0" (
-        echo   [方式2] 失败，尝试 node 直接执行 npm...
-        for /f "tokens=*" %%p in ('where npm 2^>nul') do set "NPM_PATH=%%p"
-        if defined NPM_PATH (
-            call node "!NPM_PATH!" install
-            if not errorlevel 1 (
-                set "INSTALL_OK=1"
-                echo   [方式3] node npm install 成功
-            )
-        )
-    )
-
-    if "!INSTALL_OK!"=="0" (
-        echo [错误] npm install 失败，所有方式均尝试过
-        pause
-        exit /b 1
-    )
-    echo   依赖安装完成
 )
+
+if "!INSTALL_OK!"=="0" (
+    echo [错误] npm install 失败，所有方式均尝试过
+    pause
+    exit /b 1
+)
+echo   依赖安装完成
 
 echo   构建前端项目...
 set "BUILD_OK=0"
@@ -227,6 +226,7 @@ if "!PIP_OK!"=="0" (
 if "!PIP_OK!"=="0" (
     echo   [方式2] 失败，升级 pip 后重试...
     "!VENV_PYTHON!" -m pip install --upgrade pip >nul 2>&1
+    if errorlevel 1 echo   [警告] pip 升级失败，继续使用当前版本
     "!VENV_PIP!" install -r requirements.txt -q
     if not errorlevel 1 (
         set "PIP_OK=1"
@@ -297,16 +297,21 @@ echo [5/7] 数据库...
 
 set /p "RUN_DB_INIT=  是否执行数据库初始化/迁移？（新增字段时需要）[y/N]: "
 if /i "!RUN_DB_INIT!"=="y" (
-    "!VENV_PYTHON!" scripts\init_db.py
-    if errorlevel 1 (
+    set "DB_OK=0"
+    "!VENV_PYTHON!" scripts\init_db.py && set "DB_OK=1"
+    if "!DB_OK!"=="0" (
         echo   [警告] venv python 初始化失败，尝试系统 python...
-        python scripts\init_db.py
-        if errorlevel 1 (
-            echo   [警告] python 初始化失败，尝试 python3...
-            python3 scripts\init_db.py
-        )
+        python scripts\init_db.py && set "DB_OK=1"
     )
-    echo   数据库初始化完成
+    if "!DB_OK!"=="0" (
+        echo   [警告] python 初始化失败，尝试 python3...
+        python3 scripts\init_db.py && set "DB_OK=1"
+    )
+    if "!DB_OK!"=="0" (
+        echo   [警告] 数据库初始化可能失败，请手动检查
+    ) else (
+        echo   数据库初始化完成
+    )
 ) else (
     echo   跳过数据库初始化
 )
@@ -329,9 +334,19 @@ if not exist "!NGINX_DIR!\nginx.exe" (
 :: 复制前端文件到 nginx html 目录
 if exist "!NGINX_DIR!\html" rmdir /s /q "!NGINX_DIR!\html"
 xcopy /E /I /Q "!BLOG_DIR!\blog-ui\dist\*" "!NGINX_DIR!\html\" >nul
+if errorlevel 1 (
+    echo [错误] 复制前端文件到 Nginx 失败，请检查 blog-ui\dist 是否存在
+    pause
+    exit /b 1
+)
 
 :: 复制 nginx 配置
 copy /Y "!BLOG_DIR!\nginx-windows.conf" "!NGINX_DIR!\conf\nginx.conf" >nul
+if errorlevel 1 (
+    echo [错误] 复制 Nginx 配置失败，请检查 nginx-windows.conf 是否存在
+    pause
+    exit /b 1
+)
 echo   Nginx 配置完成
 
 :: ============================================
@@ -368,7 +383,7 @@ set "START_SCRIPT=!BLOG_DIR!\start-blog.bat"
 >> "!START_SCRIPT!" echo ^)
 >> "!START_SCRIPT!" echo.
 >> "!START_SCRIPT!" echo echo [2] 检查并重启后端服务...
->> "!START_SCRIPT!" echo tasklist ^^^| findstr /I "uvicorn.exe" ^>nul 2^>^&1
+>> "!START_SCRIPT!" echo tasklist ^| findstr /I "uvicorn.exe" ^>nul 2^>^&1
 >> "!START_SCRIPT!" echo if not errorlevel 1 ^(
 >> "!START_SCRIPT!" echo     echo   发现已有 uvicorn 进程运行，正在结束...
 >> "!START_SCRIPT!" echo     taskkill /F /IM uvicorn.exe ^>nul 2^>^&1
