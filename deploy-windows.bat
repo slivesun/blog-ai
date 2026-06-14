@@ -18,9 +18,43 @@ set "NGINX_DIR=C:\Users\Administrator\nginx-1.30.2"
 set "SERVER_IP=120.26.209.105"
 
 :: ============================================
-:: 第一步：检查依赖
+:: 第一步：拉取最新代码
 :: ============================================
-echo [1/6] 检查依赖...
+echo.
+echo [1/7] 拉取最新代码...
+
+cd /d "%BLOG_DIR%"
+
+:: 检查是否为 git 仓库
+if not exist ".git" (
+    echo   [警告] 当前目录不是 Git 仓库，跳过拉取代码
+    goto :after_git_pull
+)
+
+:: 获取当前分支
+for /f "tokens=*" %%b in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set "CURRENT_BRANCH=%%b"
+if not defined CURRENT_BRANCH (
+    echo   [警告] 无法获取当前 Git 分支，跳过拉取代码
+    goto :after_git_pull
+)
+
+echo   当前分支: %CURRENT_BRANCH%
+
+:: 拉取最新代码
+git pull origin %CURRENT_BRANCH% >nul 2>&1
+if errorlevel 1 (
+    echo   [警告] git pull 失败，继续使用本地代码
+) else (
+    echo   代码已更新到最新
+)
+
+:after_git_pull
+
+:: ============================================
+:: 第二步：检查依赖
+:: ============================================
+echo.
+echo [2/7] 检查依赖...
 
 python --version >nul 2>&1
 if errorlevel 1 (
@@ -42,10 +76,10 @@ echo   Python: OK
 echo   Node.js: OK
 
 :: ============================================
-:: 第二步：构建前端
+:: 第三步：构建前端
 :: ============================================
 echo.
-echo [2/6] 构建前端...
+echo [3/7] 构建前端...
 
 cd /d "%BLOG_DIR%\blog-ui"
 
@@ -139,10 +173,10 @@ if "%BUILD_OK%"=="0" (
 echo   前端构建完成: dist\
 
 :: ============================================
-:: 第三步：配置后端
+:: 第四步：配置后端
 :: ============================================
 echo.
-echo [3/6] 配置后端...
+echo [4/7] 配置后端...
 
 cd /d "%BLOG_DIR%\blog-server"
 
@@ -256,10 +290,10 @@ if not exist ".env" (
 )
 
 :: ============================================
-:: 第四步：初始化数据库
+:: 第五步：初始化数据库
 :: ============================================
 echo.
-echo [4/6] 初始化数据库...
+echo [5/7] 初始化数据库...
 
 python scripts\init_db.py 2>nul
 if errorlevel 1 (
@@ -269,10 +303,10 @@ if errorlevel 1 (
 echo   数据库初始化完成
 
 :: ============================================
-:: 第五步：配置 Nginx
+:: 第六步：配置 Nginx
 :: ============================================
 echo.
-echo [5/6] 配置 Nginx...
+echo [6/7] 配置 Nginx...
 
 if not exist "%NGINX_DIR%\nginx.exe" (
     echo.
@@ -292,10 +326,10 @@ copy /Y "%BLOG_DIR%\nginx-windows.conf" "%NGINX_DIR%\conf\nginx.conf" >nul
 echo   Nginx 配置完成
 
 :: ============================================
-:: 第六步：创建启动脚本
+:: 第七步：创建启动脚本
 :: ============================================
 echo.
-echo [6/6] 创建启动脚本...
+echo [7/7] 创建启动脚本...
 
 :: 创建后端启动脚本
 (
