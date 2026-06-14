@@ -2,10 +2,10 @@
 笔记模型
 定义系统笔记数据结构，用于存储开发文档、技术备忘等
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.session import Base
+from app.utils.datetime import utcnow
 
 
 class Note(Base):
@@ -22,8 +22,8 @@ class Note(Base):
     category = Column(String(100), default="General", comment="笔记分类")
     tags = Column(String(500), nullable=True, comment="标签，逗号分隔")
     author_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, comment="作者ID")
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment="更新时间")
+    created_at = Column(DateTime, default=utcnow, comment="创建时间")
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, comment="更新时间")
 
     # 关联关系
     author = relationship("User", back_populates="notes")

@@ -3,7 +3,7 @@
 提供笔记的CRUD操作
 """
 from typing import Annotated, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -12,6 +12,7 @@ from app.models.note import Note
 from app.schemas.note import NoteCreate, NoteUpdate, NoteResponse, NoteListResponse
 from app.schemas.common import DataResponse
 from app.core.dependencies import get_current_user, get_current_active_user
+from app.core.limiter import limiter
 from app.utils.slug import slugify
 
 
@@ -64,9 +65,10 @@ async def get_notes(
     if category:
         query = query.filter(Note.category == category)
 
-    # 搜索
+    # 搜索（转义 LIKE 通配符）
     if search:
-        search_pattern = f"%{search}%"
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        search_pattern = f"%{escaped}%"
         query = query.filter(
             (Note.title.ilike(search_pattern)) |
             (Note.content.ilike(search_pattern))
@@ -135,8 +137,10 @@ async def get_note(
 
 
 @router.post("", response_model=DataResponse[NoteResponse], status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")
 async def create_note(
     note_data: NoteCreate,
+    request: Request,
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):

@@ -3,8 +3,9 @@
 提供评论的CRUD操作
 """
 from typing import Annotated, List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
+import html
 
 from app.db.session import get_db
 from app.models.user import User
@@ -14,6 +15,7 @@ from app.models.notification import Notification
 from app.schemas.article import CommentCreate, CommentUpdate, CommentResponse
 from app.schemas.common import DataResponse, PaginatedResponse
 from app.core.dependencies import get_current_user, get_current_active_user
+from app.core.limiter import limiter
 
 
 router = APIRouter()
@@ -79,9 +81,11 @@ async def get_article_comments(
 
 
 @router.post("/article/{article_id}", response_model=DataResponse[CommentResponse], status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def create_comment(
     article_id: int,
     comment_data: CommentCreate,
+    request: Request,
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
@@ -135,10 +139,12 @@ async def create_comment(
     # 创建通知给文章作者（如果评论者不是作者本人）
     if current_user.id != article.author_id:
         commenter_name = current_user.nickname or current_user.username
+        safe_title = html.escape(article.title)
+        safe_content = html.escape(comment_data.content[:50])
         notification = Notification(
             user_id=article.author_id,
             title=f"{commenter_name} 评论了你的文章",
-            description=f"你的文章「{article.title}」收到了一条新评论: {comment_data.content[:50]}",
+            description=f"你的文章「{safe_title}」收到了一条新评论: {safe_content}",
             notification_type="interaction",
             link_to_id=str(article.id)
         )

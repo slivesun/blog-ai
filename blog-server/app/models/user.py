@@ -2,10 +2,10 @@
 用户模型
 定义用户数据结构，包括用户基本信息、认证字段和关联关系
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.session import Base
+from app.utils.datetime import utcnow
 
 
 class User(Base):
@@ -27,8 +27,8 @@ class User(Base):
     role = Column(String(50), default="user", comment="角色: user/admin")
     is_active = Column(Boolean, default=True, comment="是否激活")
     is_admin = Column(Boolean, default=False, comment="是否管理员")
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment="更新时间")
+    created_at = Column(DateTime, default=utcnow, comment="创建时间")
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, comment="更新时间")
     last_login = Column(DateTime, nullable=True, comment="最后登录时间")
 
     # 关联关系

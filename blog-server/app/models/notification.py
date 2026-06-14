@@ -2,10 +2,10 @@
 通知模型
 定义系统通知数据结构，用于用户通知消息
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.session import Base
+from app.utils.datetime import utcnow
 
 
 class Notification(Base):
@@ -22,7 +22,7 @@ class Notification(Base):
     notification_type = Column(String(50), default="system", comment="通知类型: security/sync/interaction/system")
     link_to_id = Column(String(100), nullable=True, comment="关联ID(如文章ID)")
     is_read = Column(Boolean, default=False, comment="是否已读")
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
+    created_at = Column(DateTime, default=utcnow, comment="创建时间")
 
     # 关联关系
     user = relationship("User", back_populates="notifications")

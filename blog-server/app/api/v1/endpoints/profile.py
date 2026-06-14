@@ -5,8 +5,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from app.db.session import get_db
 from app.models.user import User
@@ -17,8 +15,7 @@ from app.schemas.user import (
 from app.schemas.common import DataResponse
 from app.core.dependencies import get_current_active_user
 from app.core.security import verify_password, get_password_hash
-
-limiter = Limiter(key_func=get_remote_address)
+from app.core.limiter import limiter
 
 
 router = APIRouter()

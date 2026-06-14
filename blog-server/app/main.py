@@ -7,17 +7,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.api.v1.router import api_router
 from app.middleware.cors import configure_cors
 from app.middleware.logging import RequestLoggingMiddleware, ErrorHandlingMiddleware
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from loguru import logger
 import sys
-
-# 限流器：基于客户端 IP，全局默认 100次/分钟
-limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
 
 def setup_logging():
@@ -164,27 +160,38 @@ def create_app() -> FastAPI:
     # 注册API路由
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
-    # 健康检查端点
+    # 健康检查端点（含数据库连通性检测）
     @app.get("/health", tags=["健康检查"])
     async def health_check():
         """健康检查端点"""
+        db_ok = True
+        try:
+            from app.db.session import SessionLocal
+            from sqlalchemy import text
+            db = SessionLocal()
+            db.execute(text("SELECT 1"))
+            db.close()
+        except Exception:
+            db_ok = False
+
         return {
-            "status": "healthy",
+            "status": "healthy" if db_ok else "degraded",
             "version": settings.VERSION,
-            "environment": settings.ENVIRONMENT
+            "environment": settings.ENVIRONMENT,
+            "database": "connected" if db_ok else "disconnected"
         }
 
-    # 全局异常处理器
+    # 全局异常处理器（不泄露内部错误详情）
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         """全局异常处理"""
-        logger.exception(f"Global exception: {str(exc)}")
+        logger.exception(f"Global exception: {type(exc).__name__}")
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
                 "message": "Internal server error",
-                "detail": str(exc) if settings.is_development else "An error occurred"
+                "detail": "An error occurred"
             }
         )
 

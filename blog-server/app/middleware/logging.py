@@ -32,7 +32,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         # 记录请求开始
         start_time = time.time()
 
-        # 记录请求信息
+        # 记录请求信息（只记录路径，不记录查询参数，防止泄露敏感信息）
         logger.info(
             f"[{request_id}] {request.method} {request.url.path} - "
             f"Client: {request.client.host if request.client else 'Unknown'}"
@@ -93,14 +93,13 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             # 记录异常
             logger.exception(f"Unhandled exception: {str(e)}")
 
-            # 返回500错误响应（生产环境隐藏内部错误细节）
+            # 返回500错误响应（不泄露内部错误细节）
             from fastapi.responses import JSONResponse
-            from app.core.config import settings as app_settings
             return JSONResponse(
                 status_code=500,
                 content={
                     "success": False,
                     "message": "Internal server error",
-                    "detail": str(e) if app_settings.is_development else "An error occurred"
+                    "detail": "An error occurred"
                 }
             )

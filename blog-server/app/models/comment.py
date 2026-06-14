@@ -2,10 +2,10 @@
 评论模型
 定义评论数据结构，包括评论内容、嵌套回复和关联关系
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.db.session import Base
+from app.utils.datetime import utcnow
 
 
 class Comment(Base):
@@ -21,8 +21,8 @@ class Comment(Base):
     author_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, comment="评论者ID")
     parent_id = Column(Integer, ForeignKey("comments.id", ondelete="CASCADE"), nullable=True, comment="父评论ID(用于嵌套)")
     is_deleted = Column(Boolean, default=False, comment="是否删除(软删除)")
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment="更新时间")
+    created_at = Column(DateTime, default=utcnow, comment="创建时间")
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, comment="更新时间")
 
     # 关联关系
     article = relationship("Article", back_populates="comments")

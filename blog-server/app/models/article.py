@@ -2,10 +2,10 @@
 文章模型
 定义文章数据结构，包括文章内容、分类、标签和关联关系
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from app.db.session import Base
+from app.utils.datetime import utcnow
 
 
 # 文章-标签关联表
@@ -30,7 +30,7 @@ class Category(Base):
     description = Column(Text, nullable=True, comment="分类描述")
     color = Column(String(20), default="#6366f1", comment="分类颜色")
     sort_order = Column(Integer, default=0, comment="排序顺序")
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
+    created_at = Column(DateTime, default=utcnow, comment="创建时间")
 
     # 关联关系
     articles = relationship("Article", back_populates="category")
@@ -49,7 +49,7 @@ class Tag(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(50), unique=True, nullable=False, index=True, comment="标签名称")
     slug = Column(String(50), unique=True, nullable=False, index=True, comment="URL友好名称")
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
+    created_at = Column(DateTime, default=utcnow, comment="创建时间")
 
     # 关联关系
     articles = relationship("Article", secondary=article_tags, back_populates="tags")
@@ -78,8 +78,8 @@ class Article(Base):
     is_draft = Column(Boolean, default=False, comment="是否为草稿")
     is_published = Column(Boolean, default=True, comment="是否发布")
     published_at = Column(DateTime, nullable=True, comment="发布时间")
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment="更新时间")
+    created_at = Column(DateTime, default=utcnow, comment="创建时间")
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, comment="更新时间")
 
     # 关联关系
     author = relationship("User", back_populates="articles")

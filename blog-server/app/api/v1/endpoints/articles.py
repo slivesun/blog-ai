@@ -2,11 +2,15 @@
 文章API端点
 提供文章的CRUD操作、分页、搜索等功能
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, asc
+from collections import deque
+import time
+import re
+import html
 
 from app.db.session import get_db
 from app.models.user import User
@@ -21,10 +25,20 @@ from app.schemas.article import (
 from app.schemas.common import DataResponse, PaginatedResponse
 from app.core.dependencies import get_current_user, get_current_active_user
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.utils.slug import slugify
 
 
 router = APIRouter()
+
+# 点赞防刷：记录 (ip, article_id) 的点赞时间，24小时内重复点赞不计数
+_like_records: dict[str, deque] = {}
+_LIKE_DEDUP_WINDOW = 86400  # 24小时
+
+
+def _escape_like_pattern(s: str) -> str:
+    """转义 SQL LIKE 通配符，防止 % 和 _ 被误解"""
+    return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def _build_comment_tree(comments, parent_id=None):
@@ -193,7 +207,8 @@ async def get_articles(
         query = query.filter(Article.author_id == author_id)
 
     if search:
-        search_pattern = f"%{search}%"
+        escaped = _escape_like_pattern(search)
+        search_pattern = f"%{escaped}%"
         query = query.filter(
             (Article.title.ilike(search_pattern)) |
             (Article.abstract.ilike(search_pattern))
@@ -233,6 +248,8 @@ async def get_articles(
 @router.get("/{article_id}", response_model=DataResponse[ArticleResponse])
 async def get_article(
     article_id: int,
+    request: Request,
+    response: Response,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user)
 ):
@@ -266,16 +283,27 @@ async def get_article(
                 detail="Article not found"
             )
 
-    # 增加浏览数
-    article.views += 1
-    db.commit()
+    # 增加浏览数（Cookie去重：同一浏览器24小时内同一文章只计一次）
+    view_cookie = request.cookies.get(f"viewed_{article_id}")
+    if not view_cookie:
+        article.views += 1
+        db.commit()
+        response.set_cookie(
+            key=f"viewed_{article_id}",
+            value="1",
+            max_age=86400,  # 24小时
+            httponly=True,
+            samesite="lax"
+        )
 
     return DataResponse(data=build_article_response(article, include_content=True))
 
 
 @router.post("", response_model=DataResponse[ArticleResponse], status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def create_article(
     article_data: ArticleCreate,
+    request: Request,
     current_user: Annotated[User, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
@@ -309,7 +337,7 @@ async def create_article(
         author_id=current_user.id,
         is_draft=article_data.is_draft,
         is_published=not article_data.is_draft,
-        published_at=datetime.utcnow() if not article_data.is_draft else None
+        published_at=datetime.now(timezone.utc) if not article_data.is_draft else None
     )
 
     # 添加标签
@@ -386,7 +414,7 @@ async def update_article(
         is_published = update_data.get("is_published", article.is_published)
         is_draft = update_data.get("is_draft", article.is_draft)
         if not is_draft and is_published and article.published_at is None:
-            update_data["published_at"] = datetime.utcnow()
+            update_data["published_at"] = datetime.now(timezone.utc)
 
     # 应用更新
     for key, value in update_data.items():
@@ -436,16 +464,19 @@ async def delete_article(
 
 
 @router.post("/{article_id}/like", response_model=DataResponse[ArticleLikeResponse])
+@limiter.limit("30/minute")
 async def like_article(
     article_id: int,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user)
 ):
     """
-    点赞文章
+    点赞文章（IP去重：同IP 24小时内同一文章只计一次）
 
     参数:
         article_id: 文章ID
+        request: 请求对象（用于获取客户端IP）
         db: 数据库会话
         current_user: 当前用户（可选）
 
@@ -463,15 +494,37 @@ async def like_article(
             detail="Article not found"
         )
 
+    # IP去重：24小时内同IP同一文章只计一次
+    client_ip = request.client.host if request.client else "unknown"
+    dedup_key = f"{client_ip}:{article_id}"
+    now = time.time()
+
+    if dedup_key not in _like_records:
+        _like_records[dedup_key] = deque()
+    record = _like_records[dedup_key]
+
+    # 清理过期记录
+    while record and record[0] < now - _LIKE_DEDUP_WINDOW:
+        record.popleft()
+
+    if record:
+        # 24小时内已点过赞
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="24小时内已经点过赞了"
+        )
+
+    record.append(now)
     article.likes += 1
 
     # 创建通知给文章作者（如果点赞者已认证且不是作者本人）
     if current_user and current_user.id != article.author_id:
         liker_name = current_user.nickname or current_user.username
+        safe_title = html.escape(article.title)
         notification = Notification(
             user_id=article.author_id,
             title=f"{liker_name} 点赞了你的文章",
-            description=f"你的文章「{article.title}」收到了一个新的点赞",
+            description=f"你的文章「{safe_title}」收到了一个新的点赞",
             notification_type="interaction",
             link_to_id=str(article.id)
         )
