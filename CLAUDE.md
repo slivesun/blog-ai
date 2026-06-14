@@ -1,5 +1,7 @@
 # Blog Project - Key Notes
 
+## 不要擅自链接服务器
+
 ## Project Structure
 
 - **Backend**: FastAPI + SQLAlchemy + SQLite, in `blog-server/`
