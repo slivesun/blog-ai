@@ -69,7 +69,7 @@ async def register(
         nickname=register_data.username,
         email=register_data.email,
         hashed_password=hashed_password,
-        full_name=request.username,
+        full_name=register_data.username,
         role="user",
         is_active=True,
         is_admin=False
