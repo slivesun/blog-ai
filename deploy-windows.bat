@@ -295,8 +295,8 @@ if not exist ".env" (
 echo.
 echo [5/7] 数据库...
 
-set /p "RUN_DB_INIT=  是否执行数据库初始化/迁移？（新增字段时需要）[y/N]: "
-if /i "!RUN_DB_INIT!"=="y" (
+choice /C YN /T 8 /D N /N /M "  是否执行数据库初始化/迁移？（新增字段时需要）[Y/N，8秒后自动跳过]: "
+if !errorlevel!==1 (
     set "DB_OK=0"
     "!VENV_PYTHON!" scripts\init_db.py && set "DB_OK=1"
     if "!DB_OK!"=="0" (
@@ -415,20 +415,9 @@ echo   启动脚本已创建
 :: ============================================
 echo.
 echo ==========================================
-echo   部署准备完成！
+echo   部署完成！
+echo   启动: !BLOG_DIR!\start-blog.bat
+echo   访问: http://!SERVER_IP!
 echo ==========================================
-echo.
-echo   后续步骤:
-echo   1. 下载安装 Nginx: http://nginx.org/en/download.html
-echo      解压到 !NGINX_DIR!
-echo   2. 运行 !BLOG_DIR!\start-blog.bat 启动服务
-echo   3. 阿里云安全组开放 80 端口
-echo   4. 访问 http://!SERVER_IP!
-echo.
-echo   文件位置:
-echo     项目目录: !BLOG_DIR!
-echo     后端:     !BLOG_DIR!\blog-server
-echo     前端构建: !BLOG_DIR!\blog-ui\dist
-echo     Nginx:    !NGINX_DIR!
 echo.
 pause
