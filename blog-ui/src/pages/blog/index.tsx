@@ -51,9 +51,33 @@ export default function BlogView({
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [visibleCount, setVisibleCount] = useState(3);
+  const [visibleCount, setVisibleCount] = useState(9);
   const [hasMore, setHasMore] = useState(true);
   const [detailLoaded, setDetailLoaded] = useState(false);
+
+  // 进入详情页前保存滚动位置
+  const saveScrollPosition = () => {
+    sessionStorage.setItem('blog_scroll_y', window.scrollY.toString());
+  };
+
+  // 返回列表页后恢复滚动位置
+  useEffect(() => {
+    if (currentPath === "blog") {
+      const savedY = sessionStorage.getItem('blog_scroll_y');
+      if (savedY) {
+        // 延迟恢复，等 lazy 组件和图片加载完成
+        const restore = () => {
+          requestAnimationFrame(() => {
+            window.scrollTo(0, parseInt(savedY, 10));
+          });
+        };
+        // 多次尝试恢复，防止图片加载导致高度变化
+        restore();
+        const timer = setTimeout(restore, 300);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [currentPath]);
 
   const activeArticle = articles.find((a) => a.id === (urlArticleId || selectedArticleId));
 
@@ -199,7 +223,7 @@ export default function BlogView({
   };
 
   const handleLoadMore = () => {
-    setVisibleCount((c) => c + 3);
+    setVisibleCount((c) => c + 6);
     if (visibleCount >= articles.length) {
       setHasMore(false);
     }
@@ -243,6 +267,21 @@ export default function BlogView({
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           {t.blog.backToFeed}
+        </button>
+
+        {/* 悬浮返回按钮 - 右侧固定 */}
+        <button
+          onClick={() => {
+            setSelectedArticleId(null);
+            navigate("/blog");
+          }}
+          className="fixed right-6 top-1/2 -translate-y-1/2 z-50 group flex items-center gap-2 bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white rounded-full p-3 hover:pr-5 shadow-lg shadow-black/30 transition-all duration-300 cursor-pointer"
+          title={t.blog.backToFeed}
+        >
+          <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" />
+          <span className="text-xs font-mono whitespace-nowrap overflow-hidden max-w-0 group-hover:max-w-[80px] transition-all duration-300">
+            {t.blog.backToFeed}
+          </span>
         </button>
 
         <div className="relative h-64 sm:h-96 w-full rounded-2xl overflow-hidden mb-8 border border-slate-800">
@@ -529,6 +568,7 @@ export default function BlogView({
             <div
               key={art.id}
               onClick={() => {
+                saveScrollPosition();
                 setSelectedArticleId(art.id);
                 navigate(`/blog/${art.id}`);
               }}

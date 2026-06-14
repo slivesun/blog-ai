@@ -108,7 +108,7 @@ export default function App() {
     if ((currentPath === "blog" || currentPath === "blog-detail" || currentPath === "blog-compose") && !articlesLoaded) {
       const loadArticles = async () => {
         try {
-          const response = await articleApi.getArticles({ page_size: 20 });
+          const response = await articleApi.getArticles({ page_size: 50 });
           if (response.success && response.data) {
             const transformed = response.data.articles.map(transformArticle);
             setArticles(transformed);

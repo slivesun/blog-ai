@@ -1,0 +1,334 @@
+"""
+博客文章种子脚本
+向数据库插入30篇短博客文章
+用法: cd blog-server && python seed_articles.py
+"""
+import sys
+import os
+
+# 确保可以导入 app 模块
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from app.db.session import SessionLocal, init_db
+from app.models.article import Article, Category, Tag
+from app.models.user import User
+from app.utils.slug import slugify
+from datetime import datetime, timezone, timedelta
+import random
+
+# 4 个分类
+CATEGORIES = [
+    {"name": "Engineering", "slug": "engineering", "description": "Software engineering and development", "color": "#06b6d4", "sort_order": 1},
+    {"name": "Design", "slug": "design", "description": "UI/UX and visual design", "color": "#d946ef", "sort_order": 2},
+    {"name": "Security", "slug": "security", "description": "Cybersecurity and privacy", "color": "#ef4444", "sort_order": 3},
+    {"name": "Systems", "slug": "systems", "description": "Infrastructure and architecture", "color": "#10b981", "sort_order": 4},
+]
+
+# Unsplash 封面图（按分类）
+COVER_IMAGES = {
+    "Engineering": [
+        "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1537432376149-e89d4d7a5f1a?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1605379399642-870262d3d051?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=800&auto=format&fit=crop",
+    ],
+    "Design": [
+        "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1541462608143-2a13ee16fa48?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1586717799252-bd134571e6f2?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop",
+    ],
+    "Security": [
+        "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1563986768609-322da13575f2?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1515378960530-7c0da6231fb1?w=800&auto=format&fit=crop",
+    ],
+    "Systems": [
+        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop",
+    ],
+}
+
+# 30 篇文章数据
+ARTICLES = [
+    # Engineering (8篇)
+    {
+        "title": "React 19 新特性：Server Components 实战",
+        "abstract": "深入探索 React 19 Server Components 的实际应用场景和性能优势。",
+        "content": "React 19 正式引入了 Server Components，这是一个革命性的特性，允许组件在服务器端渲染而不会增加客户端 bundle 大小。\n\nServer Components 可以直接访问数据库、文件系统等服务器资源，无需通过 API 层。这意味着我们可以更简洁地获取数据，同时保持客户端的交互性。\n\n在实际项目中，我们可以将页面分为 Server Components 和 Client Components。静态内容使用 Server Components 渲染，需要交互的部分使用 use client 标记为客户端组件。\n\n性能测试表明，使用 Server Components 可以将首次加载时间减少 30-40%，同时显著降低 JavaScript bundle 大小。",
+        "category": "Engineering",
+    },
+    {
+        "title": "TypeScript 5.8 类型体操进阶指南",
+        "abstract": "掌握 TypeScript 高级类型推导技巧，提升代码类型安全性。",
+        "content": "TypeScript 的类型系统是图灵完备的，这意味着我们可以在类型层面实现复杂的逻辑。本文将介绍几个实用的高级类型技巧。\n\n条件类型（Conditional Types）允许我们根据类型关系进行推导。例如 T extends U ? X : Y 可以根据 T 是否可赋值给 U 来选择不同的类型。\n\n模板字面量类型（Template Literal Types）让我们可以在类型层面操作字符串。结合映射类型，可以实现自动化的 API 路由类型生成。\n\n递归类型在处理深层嵌套数据结构时非常有用，比如深度只读（DeepReadonly）或深度可选（DeepPartial）的类型定义。",
+        "category": "Engineering",
+    },
+    {
+        "title": "Vite 6 构建优化：从开发到生产的全链路提速",
+        "abstract": "通过配置优化和插件选择，将 Vite 项目构建速度提升 50% 以上。",
+        "content": "Vite 6 带来了多项构建性能改进，但默认配置并不总是最优的。本文分享一些实战优化经验。\n\n首先，确保使用 SWC 替代 Babel 作为转译器。在 vite.config.ts 中配置 @vitejs/plugin-react-swc 可以将开发启动速度提升 2-3 倍。\n\n其次，合理配置依赖预构建。对于大型依赖如 lodash，使用 optimizeDeps.include 强制预构建，避免开发时的频繁重编译。\n\n代码分割方面，使用 manualChunks 将 vendor 代码分离，并利用动态 import 实现路由级别的懒加载。配合 CDN 加速静态资源，可以将首屏加载时间控制在 1 秒以内。",
+        "category": "Engineering",
+    },
+    {
+        "title": "FastAPI 异步编程最佳实践",
+        "abstract": "深入理解 Python 异步模型，避免常见的异步陷阱和性能瓶颈。",
+        "content": "FastAPI 基于 Python 的 asyncio 构建，但很多开发者在使用异步时会犯一些常见错误。\n\n第一个常见错误是在异步函数中使用同步阻塞操作。例如 time.sleep() 会阻塞整个事件循环，应该使用 await asyncio.sleep() 代替。\n\n数据库操作也需要注意。虽然 SQLAlchemy 支持异步，但如果你使用的是同步 driver，在异步函数中执行数据库查询仍然会阻塞。解决方案是使用 run_in_executor 或切换到 asyncpg 等异步 driver。\n\n对于 CPU 密集型任务，应该使用 asyncio.get_event_loop().run_in_executor() 将其放到线程池中执行，避免阻塞事件循环。",
+        "category": "Engineering",
+    },
+    {
+        "title": "Docker 多阶段构建实战：镜像瘦身 90%",
+        "abstract": "通过多阶段构建和优化策略，将 Docker 镜像从 1.2GB 压缩到 120MB。",
+        "content": "Docker 镜像过大是很多项目面临的问题。多阶段构建是解决这个问题的关键技术。\n\n基本思路是将构建过程分为多个阶段：第一阶段使用完整的构建环境编译应用，第二阶段使用精简的基础镜像只复制编译产物。\n\n以 Node.js 项目为例，第一阶段使用 node:20 安装依赖并构建，第二阶段使用 node:20-slim 只复制 dist 目录和 node_modules 中的生产依赖。\n\n进一步优化可以使用 Alpine 基础镜像（node:20-alpine），配合 .dockerignore 排除不必要的文件。最终镜像可以从 1.2GB 压缩到 120MB，同时保持功能完整性。",
+        "category": "Engineering",
+    },
+    {
+        "title": "Git 工作流：从混乱到高效",
+        "abstract": "建立清晰的 Git 分支策略和提交规范，提升团队协作效率。",
+        "content": "很多团队在使用 Git 时缺乏统一的工作流规范，导致分支混乱、合并冲突频发。本文介绍一个经过验证的工作流方案。\n\n采用 Git Flow 的简化版本：main 分支保持稳定可部署状态，feature 分支从 main 创建，完成后通过 PR 合并回 main。\n\n提交信息遵循 Conventional Commits 规范：type(scope): description。常用的 type 包括 feat、fix、docs、style、refactor、test、chore。\n\n配合 GitHub Actions 或 GitLab CI，在 PR 合并前自动运行 lint、test 和 build，确保代码质量。使用 husky 和 lint-staged 在本地提交时自动检查，将问题扼杀在萌芽阶段。",
+        "category": "Engineering",
+    },
+    {
+        "title": "PostgreSQL 查询优化：从慢查询到毫秒响应",
+        "abstract": "通过索引优化、查询重写和配置调优，解决 PostgreSQL 性能瓶颈。",
+        "content": "PostgreSQL 是一个功能强大的关系型数据库，但不当的使用方式可能导致严重的性能问题。\n\n索引是查询优化的核心。对于经常出现在 WHERE 子句中的列，创建 B-tree 索引。对于 JSONB 字段，使用 GIN 索引。对于地理空间数据，使用 GiST 索引。\n\nEXPLAIN ANALYZE 是分析查询性能的利器。它显示查询执行计划和实际耗时，帮助我们识别全表扫描、嵌套循环等性能瓶颈。\n\n连接池配置也很重要。使用 PgBouncer 或 SQLAlchemy 的连接池，避免频繁创建和销毁数据库连接。设置合理的 pool_size 和 max_overflow，平衡性能和资源消耗。",
+        "category": "Engineering",
+    },
+    {
+        "title": "CSS Container Queries：响应式设计的新纪元",
+        "abstract": "告别 Media Queries 的局限，用 Container Queries 实现真正的组件级响应式。",
+        "content": "CSS Container Queries 终于得到了主流浏览器的全面支持，这改变了我们构建响应式组件的方式。\n\n传统的 Media Queries 基于视口宽度，无法感知组件所在容器的大小。这导致同一个组件在不同布局中可能表现不一致。\n\nContainer Queries 允许组件根据其父容器的大小来调整样式。使用 @container 规则，我们可以定义组件在不同容器宽度下的表现。\n\n配合 CSS Subgrid，我们可以构建出真正独立、可复用的响应式组件库。每个组件自己管理响应式逻辑，不需要了解外部布局的细节。",
+        "category": "Engineering",
+    },
+    # Design (7篇)
+    {
+        "title": "设计系统中的间距体系：从 4px 网格到和谐布局",
+        "abstract": "建立统一的间距规范，让设计和开发之间的协作更加顺畅。",
+        "content": "间距是设计系统中最容易被忽视但又最重要的基础元素之一。一个良好的间距体系可以让界面看起来和谐统一。\n\n采用 4px 基准网格是最常见的做法。所有间距值都是 4 的倍数：4、8、12、16、24、32、48、64。这保证了视觉上的一致性。\n\n在 CSS 中，使用 CSS 自定义属性定义间距变量：--space-1: 4px、--space-2: 8px 等。在 Tailwind CSS 中，这些已经内置为 spacing scale。\n\n间距的选择应该遵循内容层级原则：相关元素之间使用较小间距，不同区块之间使用较大间距。这帮助用户在视觉上理解内容的分组关系。",
+        "category": "Design",
+    },
+    {
+        "title": "深色模式设计指南：不只是换个背景色",
+        "abstract": "深入探讨深色模式的设计原则，避免常见的设计陷阱。",
+        "content": "深色模式不是简单地将背景色换成黑色，前景色换成白色。好的深色模式需要仔细考虑多个设计维度。\n\n颜色选择上，深色背景不应该是纯黑 (#000000)，而是带有一点色调的深灰，如 #121212 或 #1a1a2e。这样可以减少眼睛疲劳，同时让彩色元素更加突出。\n\n阴影在深色模式下几乎不可见，需要用边框或微妙的背景色差来创造层级感。例如，卡片可以使用比背景稍亮的底色，而不是阴影。\n\n文字颜色也需要注意。纯白文字在深色背景上对比度太高，会造成视觉疲劳。使用 #e0e0e0 或 rgba(255,255,255,0.87) 更加舒适。",
+        "category": "Design",
+    },
+    {
+        "title": "微交互设计：让界面活起来",
+        "abstract": "通过精心设计的微交互，提升产品的用户体验和情感连接。",
+        "content": "微交互是产品中那些细小但重要的交互细节，它们让用户感受到产品的生命力和关怀。\n\n按钮的 hover 效果是最基础的微交互。一个微妙的缩放（scale: 1.02）和颜色变化就能让用户感受到可点击性。使用 CSS transition 控制动画时长，200-300ms 是最佳范围。\n\n加载状态的处理也很关键。骨架屏（Skeleton Screen）比传统的 loading spinner 更好，因为它预示了内容的结构，减少用户的等待焦虑。\n\n状态转换动画应该遵循物理规律：使用 ease-out 作为进入动画的缓动函数，ease-in 作为退出动画。这符合物体在现实世界中的运动规律，让用户感觉更自然。",
+        "category": "Design",
+    },
+    {
+        "title": "字体配对的艺术：如何选择完美的字体组合",
+        "abstract": "掌握字体配对的基本原则，为你的项目选择合适的字体组合。",
+        "content": "字体选择对设计的整体感觉有着巨大的影响。一个好的字体组合可以让设计看起来专业而精致。\n\n最基本的配对原则是对比：使用一个衬线字体（Serif）搭配一个无衬线字体（Sans-serif）。例如，标题使用 Playfair Display，正文使用 Inter。\n\n字体的 x-height 应该相近，这样当它们放在一起时不会显得不协调。同时，注意字体的笔画粗细对比，太相似的字体会缺乏层次感。\n\nGoogle Fonts 提供了大量免费字体和配对建议。常用的经典组合包括：Merriweather + Source Sans Pro、Lato + Raleway、Roboto + Roboto Slab。",
+        "category": "Design",
+    },
+    {
+        "title": "无障碍设计（A11y）：让所有人都能使用你的产品",
+        "abstract": "从 WCAG 标准出发，系统性地提升产品的可访问性。",
+        "content": "无障碍设计不仅是道德责任，在很多国家也是法律要求。WCAG 2.1 标准为 Web 无障碍提供了明确的指导。\n\n颜色对比度是最基本的要求。普通文字需要至少 4.5:1 的对比度，大文字（18px 以上或 14px 加粗）需要至少 3:1。使用 WebAIM 的对比度检查器验证你的配色。\n\n键盘可访问性同样重要。所有交互元素都应该可以通过 Tab 键访问，使用 Enter 或 Space 键激活。确保焦点指示器（focus indicator）清晰可见。\n\n为图片添加 alt 属性，为表单元素关联 label，使用语义化 HTML 标签（nav、main、article、aside）。这些简单的行为可以大幅提升屏幕阅读器用户的体验。",
+        "category": "Design",
+    },
+    {
+        "title": "Figma 自动布局进阶：构建自适应组件",
+        "abstract": "深入掌握 Figma Auto Layout 的高级技巧，提升设计效率。",
+        "content": "Figma 的 Auto Layout 是构建可维护设计系统的核心功能。掌握它的高级用法可以大幅提升设计效率。\n\n嵌套 Auto Layout 允许我们构建复杂的组件结构。例如，一个卡片组件可以包含标题、内容和操作栏三个 Auto Layout 帧，每个帧有自己的布局方向和间距。\n\n使用 Fill Container 和 Hug Contents 的组合，可以让组件在不同尺寸下自动适应。按钮文字变化时自动伸缩，容器内容增多时自动换行。\n\n配合 Variables 功能，可以在一个组件中定义多个变体，通过切换变量值快速切换状态。例如，一个按钮组件可以通过变量控制大小、颜色和禁用状态。",
+        "category": "Design",
+    },
+    {
+        "title": "响应式图片策略：在每个设备上都完美呈现",
+        "abstract": "选择合适的响应式图片方案，平衡图片质量和加载性能。",
+        "content": "在多设备时代，图片需要在从手机到 4K 显示器的各种屏幕上都表现良好。响应式图片是解决这个问题的关键。\n\n使用 picture 元素和 srcset 属性，可以根据设备的像素密度和视口宽度提供不同尺寸的图片。配合 sizes 属性，浏览器可以自动选择最合适的图片。\n\nWebP 和 AVIF 格式可以大幅减少图片文件大小。使用 picture 元素同时提供新格式和 fallback，确保兼容性。\n\n懒加载（Lazy Loading）是另一个重要的优化手段。使用 loading=lazy 属性，让浏览器在图片进入视口时才开始加载，减少首屏加载时间。",
+        "category": "Design",
+    },
+    # Security (8篇)
+    {
+        "title": "OWASP Top 10 2025：Web 安全新威胁",
+        "abstract": "了解最新的 OWASP Top 10 安全风险，保护你的 Web 应用免受攻击。",
+        "content": "OWASP Top 10 是 Web 应用安全最重要的参考标准。2025 年的更新反映了当前的安全态势。\n\n注入攻击（Injection）仍然位居前列。SQL 注入、NoSQL 注入和命令注入都是常见的攻击向量。使用参数化查询和 ORM 是最有效的防御手段。\n\n身份认证失效（Broken Authentication）包括弱密码策略、会话管理和多因素认证缺失等问题。实施严格的密码策略、使用 JWT 或 session tokens、启用 MFA 可以显著提升安全性。\n\n敏感数据暴露（Sensitive Data Exposure）要求我们对敏感数据进行加密存储和传输。使用 HTTPS、加密敏感字段、避免在日志中记录敏感信息是基本要求。",
+        "category": "Security",
+    },
+    {
+        "title": "JWT 安全最佳实践：避免常见的 Token 陷阱",
+        "abstract": "正确使用 JWT，避免安全漏洞和常见的实现错误。",
+        "content": "JWT（JSON Web Token）是现代 Web 应用中最常用的身份认证方案之一，但不正确的使用方式会带来严重安全风险。\n\n首先，永远不要在 JWT 的 payload 中存储敏感信息。虽然 JWT 是编码的（Base64），但它不是加密的。任何人都可以解码 payload 查看内容。\n\n其次，使用强密钥签名。HS256 算法需要至少 256 位的密钥。更好的选择是使用 RS256 或 ES256 非对称算法，这样即使密钥泄露，攻击者也无法伪造 token。\n\n设置合理的过期时间。Access Token 应该短命（15-30 分钟），Refresh Token 可以较长（7-30 天）。使用黑名单机制处理 token 撤销场景。",
+        "category": "Security",
+    },
+    {
+        "title": "HTTPS 配置完全指南：从证书申请到安全加固",
+        "abstract": "一步步配置安全的 HTTPS，包括 HSTS、证书透明度和 OCSP Stapling。",
+        "content": "HTTPS 是现代 Web 安全的基础。正确配置 HTTPS 不仅仅是安装证书那么简单。\n\n使用 Let's Encrypt 可以免费获取证书。配合 Certbot 自动化工具，可以实现证书的自动申请和续期。对于生产环境，建议使用 Nginx 或 Apache 的反向代理来处理 SSL 终止。\n\n启用 HSTS（HTTP Strict Transport Security）告诉浏览器始终使用 HTTPS 访问你的站点。设置 Strict-Transport-Security: max-age=31536000; includeSubDomains; preload 可以防止 SSL 剥离攻击。\n\nOCSP Stapling 可以加速证书验证过程。启用后，服务器会缓存 OCSP 响应，客户端不需要单独联系 CA 服务器验证证书状态。",
+        "category": "Security",
+    },
+    {
+        "title": "API 安全防护：限流、认证与输入验证",
+        "abstract": "构建安全的 API 防护体系，抵御常见的 API 攻击。",
+        "content": "API 是现代应用的核心，也是攻击者的主要目标。建立完善的 API 安全防护体系至关重要。\n\n限流（Rate Limiting）是防护 DDoS 和暴力破解的第一道防线。使用令牌桶或滑动窗口算法，对不同类型的 API 设置不同的限流策略。认证接口应该更严格（如 5次/分钟），普通读取接口可以宽松一些。\n\n输入验证是防止注入攻击的关键。使用 Pydantic 等库进行严格的输入验证，确保数据类型、长度和格式符合预期。对 SQL 查询使用参数化，对 HTML 输出进行转义。\n\nCORS 配置也需要谨慎。不要使用 allow_origins=["*"]，而是明确指定允许的来源域名。限制允许的 HTTP 方法和请求头，减少攻击面。",
+        "category": "Security",
+    },
+    {
+        "title": "密码安全：从哈希到盐值的完整方案",
+        "abstract": "了解密码存储的安全最佳实践，保护用户凭证安全。",
+        "content": "密码安全是身份认证系统的基础。不正确的密码存储方式可能导致大规模数据泄露后的灾难性后果。\n\n永远不要以明文存储密码。使用专门的密码哈希算法，如 bcrypt、scrypt 或 Argon2。这些算法内置了盐值生成和工作因子，可以有效抵御彩虹表攻击和暴力破解。\n\nbcrypt 是最广泛使用的密码哈希算法。它的工作因子（cost factor）可以调整，随着计算能力的提升而增加。推荐使用 cost=12 作为起始值。\n\n密码策略应该要求至少 8 个字符，包含大小写字母、数字和特殊字符。但更重要的是检查常用密码列表（如 Have I Been Pwned 的数据集），拒绝使用已泄露密码的用户。",
+        "category": "Security",
+    },
+    {
+        "title": "XSS 防护：前端安全的重中之重",
+        "abstract": "全面了解跨站脚本攻击的类型和防御策略。",
+        "content": "跨站脚本攻击（XSS）是最常见的 Web 安全漏洞之一。攻击者通过注入恶意脚本，窃取用户凭证或执行未授权操作。\n\n存储型 XSS 是最危险的类型。攻击者将恶意脚本存储在数据库中，当其他用户访问包含该内容的页面时，脚本会在他们的浏览器中执行。防御方法是对所有用户输入进行 HTML 转义。\n\n反射型 XSS 通过 URL 参数注入恶意脚本。服务器将未经过滤的参数直接嵌入到响应中。使用 Content Security Policy（CSP）可以有效防止这类攻击。\n\nDOM 型 XSS 在客户端 JavaScript 中发生。使用 innerHTML 插入未经过滤的内容是常见的触发点。使用 textContent 替代 innerHTML，或使用 DOMPurify 等库进行消毒。",
+        "category": "Security",
+    },
+    {
+        "title": "CORS 深度理解：跨域请求的安全边界",
+        "abstract": "彻底理解 CORS 的工作原理，正确配置跨域访问策略。",
+        "content": "CORS（跨域资源共享）是浏览器的同源策略的安全扩展。正确理解 CORS 对于构建安全的 Web API 至关重要。\n\n同源策略禁止从一个源（域名、协议、端口）访问另一个源的资源。CORS 通过 HTTP 头部允许服务器声明哪些源可以访问它的资源。\n\n预检请求（Preflight Request）是 CORS 的重要机制。对于非简单请求（如带有自定义头部的 PUT/DELETE 请求），浏览器会先发送 OPTIONS 请求询问服务器是否允许。\n\n配置 CORS 时，应该明确指定允许的来源，而不是使用通配符。限制允许的 HTTP 方法和请求头。对于需要携带凭证的请求，不能使用 Access-Control-Allow-Origin: *。",
+        "category": "Security",
+    },
+    {
+        "title": "依赖安全：防范供应链攻击",
+        "abstract": "建立依赖管理的安全策略，防止恶意包注入和漏洞利用。",
+        "content": "供应链攻击是近年来增长最快的安全威胁之一。攻击者通过污染开源依赖包来入侵使用这些包的项目。\n\n定期审计依赖是基本的安全实践。使用 npm audit、pip-audit 等工具检查已知漏洞。将审计步骤加入 CI/CD 流程，在每次构建时自动检查。\n\n锁定依赖版本。使用 package-lock.json 或 requirements.txt 精确指定依赖版本，避免自动升级到包含恶意代码的版本。\n\n对于关键项目，考虑使用私有包仓库（如 Verdaccio 或 Nexus）。只允许从受信任的源安装依赖。使用 SRI（Subresource Integrity）验证 CDN 资源的完整性。",
+        "category": "Security",
+    },
+    # Systems (7篇)
+    {
+        "title": "微服务架构的陷阱：何时不该使用微服务",
+        "abstract": "了解微服务架构的适用场景和常见误区，做出正确的架构决策。",
+        "content": "微服务架构不是银弹。在很多情况下，单体架构反而是更好的选择。\n\n微服务的主要优势在于独立部署、技术栈多样性和团队自治。但这些优势只有在团队规模足够大（通常超过 20 人）和系统复杂度足够高时才能体现。\n\n微服务带来的挑战包括：分布式系统的复杂性（网络延迟、部分失败、数据一致性）、服务间通信的开销、部署和监控的复杂度。这些挑战需要成熟的技术团队和完善的基础设施来应对。\n\n对于初创公司或小型团队，建议从单体架构开始。当系统增长到一定规模，出现明确的团队边界和技术异构需求时，再逐步拆分为微服务。这种演进式的架构策略比一开始就采用微服务更加务实。",
+        "category": "Systems",
+    },
+    {
+        "title": "Redis 缓存策略：从入门到精通",
+        "abstract": "掌握 Redis 的核心数据结构和缓存模式，提升系统性能。",
+        "content": "Redis 是最流行的内存数据库，广泛用于缓存、会话存储和消息队列。掌握正确的缓存策略可以大幅提升系统性能。\n\n缓存穿透是指查询不存在的数据，导致请求直接打到数据库。解决方案是使用布隆过滤器（Bloom Filter）预判断数据是否存在，或者缓存空值。\n\n缓存雪崩是指大量缓存同时失效，导致数据库瞬间压力过大。解决方案是给缓存过期时间添加随机偏移量，避免同时失效。\n\n缓存击穿是指热点数据失效时，大量并发请求同时打到数据库。使用互斥锁（Mutex Lock）或永不过期策略配合后台异步更新来解决。\n\nRedis 的数据结构选择也很关键。String 适合简单键值，Hash 适合对象存储，List 适合队列，Set 适合去重，Sorted Set 适合排行榜。",
+        "category": "Systems",
+    },
+    {
+        "title": "Docker Compose 编排实战：一键部署完整开发环境",
+        "abstract": "使用 Docker Compose 编排多容器应用，实现开发环境的标准化。",
+        "content": "Docker Compose 是定义和运行多容器应用的利器。通过一个 YAML 文件，可以描述整个应用的服务架构。\n\n一个典型的 Web 应用栈包括：Web 服务器（Nginx）、应用服务器（Node.js/Python）、数据库（PostgreSQL）和缓存（Redis）。使用 Docker Compose 可以一键启动所有服务。\n\n服务间通信使用 Docker 网络。Compose 自动创建默认网络，服务可以通过服务名互相访问。例如，应用服务器可以使用 db 作为主机名连接数据库。\n\n数据持久化使用 volumes。将数据库数据目录挂载到宿主机，避免容器重建时数据丢失。使用 named volumes 比 bind mounts 更易于管理。\n\n环境变量管理使用 .env 文件和 environment 配置。敏感信息（如数据库密码）通过 .env 文件注入，不写入代码仓库。",
+        "category": "Systems",
+    },
+    {
+        "title": "Nginx 配置进阶：性能优化与安全加固",
+        "abstract": "深入 Nginx 配置，实现高性能反向代理和安全防护。",
+        "content": "Nginx 是最流行的 Web 服务器和反向代理。合理的配置可以显著提升性能和安全性。\n\n启用 Gzip 压缩可以减少传输数据量。配置 gzip on、gzip_types 指定需要压缩的 MIME 类型、gzip_min_length 设置最小压缩阈值。注意不要压缩已经压缩的格式（如图片）。\n\n连接优化包括：keepalive_timeout 设置长连接超时、worker_connections 调整每个 worker 的最大连接数、proxy_buffer_size 优化代理缓冲区。\n\n安全配置包括：隐藏 Nginx 版本号（server_tokens off）、添加安全响应头（X-Frame-Options、X-Content-Type-Options、CSP）、限制请求体大小（client_max_body_size）。\n\nSSL 配置使用 TLS 1.2+，禁用不安全的加密套件。启用 OCSP Stapling 和 HSTS。使用 SSL Labs 测试工具验证配置。",
+        "category": "Systems",
+    },
+    {
+        "title": "日志系统设计：从混乱到可观测",
+        "abstract": "构建结构化日志系统，实现高效的故障排查和系统监控。",
+        "content": "良好的日志系统是运维和故障排查的基础。结构化日志比纯文本日志更易于分析和检索。\n\n使用 JSON 格式记录日志。每条日志包含时间戳、日志级别、请求 ID、用户 ID、操作类型、耗时等字段。Loguru、structlog 等库可以简化结构化日志的实现。\n\n日志级别应该合理使用：DEBUG 用于开发调试、INFO 用于正常操作记录、WARNING 用于潜在问题、ERROR 用于错误但不影响系统运行、CRITICAL 用于致命错误。\n\n集中式日志收集使用 ELK Stack（Elasticsearch + Logstash + Kibana）或 Grafana Loki。将所有服务的日志汇聚到一个平台，方便跨服务关联分析。\n\n日志轮转和清理策略同样重要。使用 logrotate 或应用内置的日志轮转功能，按大小或时间切割日志文件，定期清理过期日志。",
+        "category": "Systems",
+    },
+    {
+        "title": "CI/CD 流水线设计：从提交到部署的自动化",
+        "abstract": "设计高效的 CI/CD 流水线，实现代码变更的自动验证和部署。",
+        "content": "CI/CD 是现代软件开发的核心实践。一个好的流水线可以大幅提升开发效率和代码质量。\n\nCI（持续集成）阶段包括：代码检出、依赖安装、代码检查（lint）、单元测试、构建。每个步骤失败都应该阻断流水线，防止问题代码合并。\n\nCD（持续部署）阶段包括：构建 Docker 镜像、推送到镜像仓库、部署到测试环境、集成测试、部署到生产环境。使用蓝绿部署或金丝雀发布策略降低部署风险。\n\nGitHub Actions 和 GitLab CI 是最常用的 CI/CD 平台。使用 YAML 文件定义流水线步骤，支持缓存依赖、并行执行和矩阵构建。\n\n安全扫描应该集成到流水线中：依赖漏洞扫描（Dependabot/Snyk）、代码安全分析（SonarQube）、容器镜像扫描（Trivy）。发现问题自动阻断合并。",
+        "category": "Systems",
+    },
+    {
+        "title": "消息队列选型：Kafka vs RabbitMQ vs Redis Streams",
+        "abstract": "对比主流消息队列方案，根据业务场景选择合适的技术。",
+        "content": "消息队列是分布式系统中解耦和异步处理的核心组件。不同场景需要不同的消息队列方案。\n\nKafka 适合高吞吐量的流处理场景。它的分区机制支持水平扩展，持久化存储支持消息回溯。适合日志收集、事件溯源和实时数据管道。\n\nRabbitMQ 适合传统的任务队列和 RPC 场景。它支持复杂的路由规则（Exchange/Binding）、消息确认和死信队列。适合需要精确控制消息投递的业务场景。\n\nRedis Streams 是 Redis 5.0 引入的消息队列功能。它结合了 Redis 的高性能和消息队列的特性。适合轻量级的异步处理和事件通知。\n\n选择消息队列时需要考虑：吞吐量要求、消息持久化需求、消息顺序保证、消费者组支持、运维复杂度和团队熟悉程度。",
+        "category": "Systems",
+    },
+]
+
+
+def seed():
+    """执行种子数据插入"""
+    db = SessionLocal()
+    try:
+        # 确保 admin 用户存在
+        admin = db.query(User).filter(User.is_admin == True).first()
+        if not admin:
+            print("[ERROR] No admin user found. Please start the server first to create the default admin.")
+            return
+        admin_id = admin.id
+        print(f"[OK] Found admin user: {admin.username} (id={admin_id})")
+
+        # 创建分类（如不存在）
+        cat_map = {}
+        for cat_data in CATEGORIES:
+            cat = db.query(Category).filter(Category.slug == cat_data["slug"]).first()
+            if not cat:
+                cat = Category(**cat_data)
+                db.add(cat)
+                db.flush()
+                print(f"[OK] Created category: {cat.name}")
+            else:
+                print(f"[SKIP] Category already exists: {cat.name}")
+            cat_map[cat_data["name"]] = cat.id
+
+        # 创建文章（按 slug 去重）
+        created = 0
+        skipped = 0
+        base_time = datetime.now(timezone.utc) - timedelta(days=60)
+
+        for i, article_data in enumerate(ARTICLES):
+            slug = slugify(article_data["title"])
+            existing = db.query(Article).filter(Article.slug == slug).first()
+            if existing:
+                skipped += 1
+                continue
+
+            cat_name = article_data["category"]
+            cover_list = COVER_IMAGES.get(cat_name, COVER_IMAGES["Engineering"])
+            cover_image = cover_list[i % len(cover_list)]
+
+            published_at = base_time + timedelta(days=random.randint(0, 55), hours=random.randint(0, 23))
+
+            article = Article(
+                title=article_data["title"],
+                slug=slug,
+                abstract=article_data["abstract"],
+                content=article_data["content"],
+                cover_image=cover_image,
+                category_id=cat_map.get(cat_name),
+                author_id=admin_id,
+                likes=random.randint(0, 50),
+                views=random.randint(10, 500),
+                is_draft=False,
+                is_published=True,
+                published_at=published_at,
+            )
+            db.add(article)
+            created += 1
+
+        db.commit()
+        print(f"\n[DONE] Created: {created}, Skipped (already exist): {skipped}, Total in DB: {db.query(Article).count()}")
+
+    except Exception as e:
+        db.rollback()
+        print(f"[ERROR] {e}")
+        raise
+    finally:
+        db.close()
+
+
+if __name__ == "__main__":
+    print("=== Blog Article Seed Script ===\n")
+    init_db()
+    seed()
