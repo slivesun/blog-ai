@@ -669,12 +669,10 @@ export default function DevToolsView({ settings }: DevToolsProps) {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col gap-6">
 
-        <aside className="w-full lg:w-64 shrink-0 space-y-2">
-          <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block mb-3 pl-2">{t.devTools.console}</span>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
+        <aside className="w-full">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
             {toolOptions.map((tool) => {
               const isActive = activeTool === tool.id;
               return (
@@ -685,19 +683,14 @@ export default function DevToolsView({ settings }: DevToolsProps) {
                     setActiveTool(tool.id);
                     setCopiedText(null);
                   }}
-                  className={`flex items-center gap-3 w-full rounded-xl border text-left p-3.5 transition-all text-xs font-semibold cursor-pointer ${
+                  className={`flex items-center gap-2 shrink-0 rounded-xl border text-left px-4 py-2.5 transition-all text-xs font-semibold cursor-pointer ${
                     isActive
                       ? sidebarBorders[settings.themeAccent]
                       : `border-slate-800 bg-slate-900/10 text-slate-400 hover:bg-slate-900/30 hover:text-white ${borderAccents[settings.themeAccent]}`
                   }`}
                 >
                   <div className="shrink-0">{tool.icon}</div>
-                  <div>
-                    <span>{tool.label}</span>
-                    <p className="text-[10px] text-slate-500 group-hover:text-slate-400 font-light font-sans hidden lg:block mt-0.5">
-                      {tool.desc}
-                    </p>
-                  </div>
+                  <span>{tool.label}</span>
                 </button>
               );
             })}

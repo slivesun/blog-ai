@@ -1101,6 +1101,16 @@
 .touch-none { touch-action: none; }
 .touch-manipulation { touch-action: manipulation; }
 
+// === Scrollbar thin ===
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 130, 0.3) transparent;
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: rgba(100, 100, 130, 0.3); border-radius: 2px; }
+  &::-webkit-scrollbar-thumb:hover { background: rgba(100, 100, 130, 0.5); }
+}
+
 // === Scroll snap ===
 .snap-x { scroll-snap-type: x mandatory; }
 .snap-y { scroll-snap-type: y mandatory; }
