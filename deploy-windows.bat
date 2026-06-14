@@ -366,47 +366,12 @@ echo [7/7] 创建启动脚本...
     echo pause
 ) > "!BLOG_DIR!\start-backend.bat"
 
-:: 创建一键启动脚本（使用临时文件方式避免特殊字符问题）
-set "START_SCRIPT=!BLOG_DIR!\start-blog.bat"
-
-> "!START_SCRIPT!" echo @echo off
->> "!START_SCRIPT!" echo chcp 65001 ^>nul
->> "!START_SCRIPT!" echo echo ==========================================
->> "!START_SCRIPT!" echo echo   Blog 博客系统 - 启动
->> "!START_SCRIPT!" echo echo ==========================================
->> "!START_SCRIPT!" echo echo.
->> "!START_SCRIPT!" echo.
->> "!START_SCRIPT!" echo echo [1] 检查后端端口占用...
->> "!START_SCRIPT!" echo for /f "tokens=5" %%%%p in ^('netstat -ano ^^^| findstr ":8000" ^^^| findstr LISTENING'^) do ^(
->> "!START_SCRIPT!" echo     echo   发现端口 8000 被 PID %%%%p 占用，准备结束...
->> "!START_SCRIPT!" echo     taskkill /F /PID %%%%p ^>nul 2^>^&1
->> "!START_SCRIPT!" echo ^)
->> "!START_SCRIPT!" echo.
->> "!START_SCRIPT!" echo echo [2] 检查并重启后端服务...
->> "!START_SCRIPT!" echo tasklist ^| findstr /I "uvicorn.exe" ^>nul 2^>^&1
->> "!START_SCRIPT!" echo if not errorlevel 1 ^(
->> "!START_SCRIPT!" echo     echo   发现已有 uvicorn 进程运行，正在结束...
->> "!START_SCRIPT!" echo     taskkill /F /IM uvicorn.exe ^>nul 2^>^&1
->> "!START_SCRIPT!" echo     timeout /t 2 /nobreak ^>nul
->> "!START_SCRIPT!" echo     echo   旧进程已结束，重新启动后端...
->> "!START_SCRIPT!" echo ^) else ^(
->> "!START_SCRIPT!" echo     echo   未发现运行中的后端进程，启动后端...
->> "!START_SCRIPT!" echo ^)
->> "!START_SCRIPT!" echo start "Blog Backend" cmd /c "!BLOG_DIR!\start-backend.bat"
->> "!START_SCRIPT!" echo timeout /t 3 /nobreak ^>nul
->> "!START_SCRIPT!" echo.
->> "!START_SCRIPT!" echo echo [3] 启动 Nginx...
->> "!START_SCRIPT!" echo taskkill /F /IM nginx.exe 2^>nul
->> "!START_SCRIPT!" echo cd /d "!NGINX_DIR!"
->> "!START_SCRIPT!" echo start "Blog Nginx" nginx.exe
->> "!START_SCRIPT!" echo.
->> "!START_SCRIPT!" echo echo ==========================================
->> "!START_SCRIPT!" echo echo   启动完成！
->> "!START_SCRIPT!" echo echo   访问地址 = http://!SERVER_IP!
->> "!START_SCRIPT!" echo echo   API 文档 = http://!SERVER_IP!/docs
->> "!START_SCRIPT!" echo echo ==========================================
->> "!START_SCRIPT!" echo echo.
->> "!START_SCRIPT!" echo pause
+:: 写入启动配置（start-blog.bat 从这里读路径）
+(
+    echo BLOG_DIR=!BLOG_DIR!
+    echo NGINX_DIR=!NGINX_DIR!
+    echo SERVER_IP=!SERVER_IP!
+) > "!BLOG_DIR!\blog-start.conf"
 
 echo   启动脚本已创建
 
