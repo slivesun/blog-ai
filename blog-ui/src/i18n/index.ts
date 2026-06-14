@@ -126,6 +126,9 @@ export type TranslationKeys = {
       empty: string;
       likes: string;
       commentsCount: string;
+      loginToComment: string;
+      loginToLike: string;
+      redirecting: string;
     };
     categories: {
       engineering: string;

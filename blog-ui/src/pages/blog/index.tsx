@@ -54,6 +54,17 @@ export default function BlogView({
   const [visibleCount, setVisibleCount] = useState(9);
   const [hasMore, setHasMore] = useState(true);
   const [detailLoaded, setDetailLoaded] = useState(false);
+  const [loginToast, setLoginToast] = useState<string | null>(null);
+
+  // 未登录时跳转登录页（带提示）
+  const requireLogin = (message: string) => {
+    setLoginToast(message);
+    localStorage.setItem('login_redirect', window.location.pathname);
+    setTimeout(() => {
+      setLoginToast(null);
+      navigate("/profile");
+    }, 2000);
+  };
 
   // 进入详情页前保存滚动位置
   const saveScrollPosition = () => {
@@ -107,6 +118,10 @@ export default function BlogView({
   }, [currentPath, urlArticleId, selectedArticleId, detailLoaded]);
 
   const handleLike = async (articleId: string) => {
+    if (!isLoggedIn) {
+      requireLogin(t.blog.detail.loginToLike);
+      return;
+    }
     if (onLikeArticle) {
       await onLikeArticle(articleId);
     } else {
@@ -122,37 +137,48 @@ export default function BlogView({
     }
   };
 
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
   const handleAddComment = async (e: React.FormEvent, articleId: string) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!isLoggedIn) {
+      requireLogin(t.blog.detail.loginToLike);
+      return;
+    }
+    if (!commentText.trim() || isSubmittingComment) return;
 
-    if (onCreateComment) {
-      const result = await onCreateComment(articleId, commentText);
-      if (result.success) {
+    setIsSubmittingComment(true);
+    try {
+      if (onCreateComment) {
+        const result = await onCreateComment(articleId, commentText);
+        if (result.success) {
+          setCommentText("");
+        }
+      } else {
+        // Fallback to local state
+        const newComment: BlogComment = {
+          id: `comm-user-${Date.now()}`,
+          author: profile.name,
+          avatar: profile.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop",
+          text: commentText,
+          date: "Today"
+        };
+
+        setArticles((prev) =>
+          prev.map((art) => {
+            if (art.id === articleId) {
+              return {
+                ...art,
+                comments: [...art.comments, newComment]
+              };
+            }
+            return art;
+          })
+        );
         setCommentText("");
       }
-    } else {
-      // Fallback to local state
-      const newComment: BlogComment = {
-        id: `comm-user-${Date.now()}`,
-        author: isLoggedIn ? profile.name : "Anonymous Security Node",
-        avatar: isLoggedIn ? profile.avatarUrl : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop",
-        text: commentText,
-        date: "Today"
-      };
-
-      setArticles((prev) =>
-        prev.map((art) => {
-          if (art.id === articleId) {
-            return {
-              ...art,
-              comments: [...art.comments, newComment]
-            };
-          }
-          return art;
-        })
-      );
-      setCommentText("");
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
 
@@ -365,30 +391,54 @@ export default function BlogView({
 
         <div id="comments-section" className="mb-12">
           <h3 className="text-lg font-heading font-bold text-white mb-6">{t.blog.detail.comments}</h3>
-          
-          <form onSubmit={(e) => handleAddComment(e, activeArticle.id)} className="mb-8">
-            <div className="space-y-3">
-              <textarea
-                className="w-full rounded-xl bg-slate-900 border border-slate-800 p-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-700 font-sans"
-                placeholder={isLoggedIn ? t.blog.detail.postAs.replace("{name}", profile.name) : t.blog.detail.anonymous}
-                rows={3}
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-              />
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-slate-500 font-mono">
-                  {isLoggedIn ? t.blog.detail.postAs.replace("{name}", profile.name) : t.blog.detail.anonymous}
-                </span>
-                <button
-                  type="submit"
-                  className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg text-white transition-all cursor-pointer ${themeBtnColors[settings.themeAccent]}`}
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  {t.blog.detail.broadcast}
-                </button>
-              </div>
+
+          {/* 登录提示 Toast */}
+          {loginToast && (
+            <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-950/30 px-4 py-3 flex items-center gap-3 animate-pulse">
+              <span className="text-sm text-amber-300">{loginToast}</span>
+              <span className="text-xs text-amber-400/70 font-mono">{t.blog.detail.redirecting}</span>
+            </div>
+          )}
+
+          {isLoggedIn ? (
+            <form onSubmit={(e) => handleAddComment(e, activeArticle.id)} className="mb-8">
+              <div className="space-y-3">
+                <textarea
+                  className="w-full rounded-xl bg-slate-900 border border-slate-800 p-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-700 font-sans"
+                  placeholder={t.blog.detail.postAs.replace("{name}", profile.name)}
+                  rows={3}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                />
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500 font-mono">
+                    {t.blog.detail.postAs.replace("{name}", profile.name)}
+                  </span>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingComment || !commentText.trim()}
+                    className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg text-white transition-all cursor-pointer ${themeBtnColors[settings.themeAccent]} ${(isSubmittingComment || !commentText.trim()) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {isSubmittingComment ? "..." : t.blog.detail.broadcast}
+                  </button>
+                </div>
             </div>
           </form>
+          ) : (
+            <div className="mb-8">
+              <button
+                onClick={() => {
+                  localStorage.setItem('login_redirect', window.location.pathname);
+                  navigate("/profile");
+                }}
+                className={`w-full flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3 rounded-xl text-white transition-all cursor-pointer ${themeBtnColors[settings.themeAccent]}`}
+              >
+                <Send className="w-4 h-4" />
+                {t.blog.detail.loginToComment}
+              </button>
+            </div>
+          )}
 
           <div className="space-y-4">
             {activeArticle.comments.length === 0 ? (

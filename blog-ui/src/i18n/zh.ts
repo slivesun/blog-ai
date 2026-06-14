@@ -124,6 +124,9 @@ export const translations = {
       empty: "评论流为空。广播初始输入。",
       likes: "{count} 点赞",
       commentsCount: "{count} 评论",
+      loginToComment: "登录后评论",
+      loginToLike: "请先登录",
+      redirecting: "2秒后跳转登录页...",
     },
     categories: {
       engineering: "工程（技术与基础设施）",

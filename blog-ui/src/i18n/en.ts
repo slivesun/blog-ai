@@ -128,6 +128,9 @@ export const translations = {
       empty: "Comment stream empty. Broadcast the initial input.",
       likes: "{count} Likes",
       commentsCount: "{count} Comments",
+      loginToComment: "Login to Comment",
+      loginToLike: "Please login first",
+      redirecting: "Redirecting to login in 2s...",
     },
     categories: {
       engineering: "Engineering (Tech & Infrastructure)",
