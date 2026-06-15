@@ -212,6 +212,7 @@ def migrate_missing_columns(engine):
     # 以后新增字段只需在此追加一行
     expected_columns = [
         ("user_settings", "skin", "VARCHAR(10)", "'dark'"),
+        ("user_settings", "theme_accent_custom", "VARCHAR(9)", "NULL"),
         ("users", "security_question", "VARCHAR(50)", "NULL"),
         ("users", "security_answer", "VARCHAR(255)", "NULL"),
     ]

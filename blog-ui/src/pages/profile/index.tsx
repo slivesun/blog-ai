@@ -55,6 +55,7 @@ export default function ProfileView({
   const [newEmail, setNewEmail] = useState(profile.email || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; type: "article" | "draft" } | null>(null);
 
   const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
 
@@ -215,22 +216,51 @@ export default function ProfileView({
     cyan: "bg-cyan-600 hover:bg-cyan-500",
     violet: "bg-violet-600 hover:bg-violet-500",
     amber: "bg-amber-600 hover:bg-amber-500",
-    emerald: "bg-emerald-600 hover:bg-emerald-500"
+    emerald: "bg-emerald-600 hover:bg-emerald-500",
+    custom: "bg-slate-600 hover:bg-slate-500"
   };
 
   const themeTextColors = {
     cyan: "text-cyan-400 border-cyan-400",
     violet: "text-violet-400 border-violet-400",
     amber: "text-amber-400 border-amber-400",
-    emerald: "text-emerald-400 border-emerald-400"
+    emerald: "text-emerald-400 border-emerald-400",
+    custom: "text-slate-300 border-slate-400"
   };
 
   const themeBtnText = {
     cyan: "text-cyan-400",
     violet: "text-violet-400",
     amber: "text-amber-400",
-    emerald: "text-emerald-400"
+    emerald: "text-emerald-400",
+    custom: "text-slate-300"
   };
+
+  const themeBorderHover = {
+    cyan: "hover:border-cyan-500",
+    violet: "hover:border-violet-500",
+    amber: "hover:border-amber-500",
+    emerald: "hover:border-emerald-500",
+    custom: "hover:border-slate-400"
+  };
+
+  // 自定义主题色的内联样式
+  const customStyle = settings.themeAccent === "custom" && settings.themeAccentCustom
+    ? { "--accent-color": settings.themeAccentCustom } as React.CSSProperties
+    : {};
+
+  // 获取主题色按钮样式
+  const getThemeBtnStyle = () => {
+    if (settings.themeAccent === "custom" && settings.themeAccentCustom) {
+      return { backgroundColor: settings.themeAccentCustom };
+    }
+    return {};
+  };
+
+  // 获取主题色文字样式（用于链接等）
+  const accentLinkColor = settings.themeAccent === "custom" && settings.themeAccentCustom
+    ? settings.themeAccentCustom
+    : undefined;
 
   // --- SIGN IN / REGISTER SCREEN ---
   if (!isLoggedIn) {
@@ -262,6 +292,7 @@ export default function ProfileView({
                       setAuthMode("register");
                       setAuthError(null);
                     }}
+                    style={accentLinkColor ? { color: accentLinkColor } : undefined}
                     className="text-xs text-indigo-400 hover:underline mt-1 cursor-pointer"
                   >
                     {t.profile.auth.noAccount}
@@ -347,7 +378,7 @@ export default function ProfileView({
                   </div>
 
                   <button
-                    style={{ marginTop: "16px" }}
+                    style={{ marginTop: "16px", ...getThemeBtnStyle() }}
                     type="submit"
                     className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]}`}
                   >
@@ -424,7 +455,7 @@ export default function ProfileView({
                   </div>
 
                   <button
-                    style={{ marginTop: "16px" }}
+                    style={{ marginTop: "16px", ...getThemeBtnStyle() }}
                     type="submit"
                     disabled={isLoggingIn}
                     className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]} ${isLoggingIn ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -454,6 +485,7 @@ export default function ProfileView({
                     setAuthError(null);
                     setAuthSuccess(null);
                   }}
+                  style={accentLinkColor ? { color: accentLinkColor } : undefined}
                   className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
                 >
                   {t.profile.auth.backToLogin}
@@ -581,7 +613,7 @@ export default function ProfileView({
                 )}
 
                 <button
-                  style={{ marginTop: "16px" }}
+                  style={{ marginTop: "16px", ...getThemeBtnStyle() }}
                   type="submit"
                   disabled={isLoggingIn}
                   className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]} ${isLoggingIn ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -604,6 +636,7 @@ export default function ProfileView({
                       setAuthError(null);
                       setAuthSuccess(null);
                     }}
+                    style={accentLinkColor ? { color: accentLinkColor } : undefined}
                     className="text-xs text-slate-500 hover:text-indigo-400 transition-colors cursor-pointer text-center w-full mt-2"
                   >
                     {t.profile.auth.forgotPassword}
@@ -620,6 +653,7 @@ export default function ProfileView({
                       setAuthError(null);
                       setAuthSuccess(null);
                     }}
+                    style={accentLinkColor ? { color: accentLinkColor } : undefined}
                     className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
                   >
                     {t.profile.auth.noAccount}
@@ -631,6 +665,7 @@ export default function ProfileView({
                       setAuthError(null);
                       setAuthSuccess(null);
                     }}
+                    style={accentLinkColor ? { color: accentLinkColor } : undefined}
                     className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
                   >
                     {t.profile.auth.backToLogin}
@@ -790,7 +825,7 @@ export default function ProfileView({
                     {t.profile.title}
                   </span>
                 </div>
-                <p className="text-xs font-mono text-indigo-400 mt-1">{profile.role}</p>
+                <p style={accentLinkColor ? { color: accentLinkColor } : undefined} className="text-xs font-mono text-indigo-400 mt-1">{profile.role}</p>
                 <p className="text-sm font-sans font-light text-slate-300 leading-relaxed mt-3">{profile.bio}</p>
 
                 {/* Sub-coordinates */}
@@ -870,6 +905,7 @@ export default function ProfileView({
               <span className="text-xs font-mono block">{t.profile.noPublished}</span>
               <button
                 onClick={() => setPath("blog-compose")}
+                style={accentLinkColor ? { color: accentLinkColor } : undefined}
                 className="mt-4 inline-flex items-center gap-1.5 text-xs text-indigo-400 font-mono hover:underline cursor-pointer"
               >
                 {t.profile.publishNew}
@@ -879,7 +915,7 @@ export default function ProfileView({
             userPublishedArticles.map((art) => (
               <div
                 key={art.id}
-                className="mt-2 rounded-xl border border-slate-800 bg-slate-900/10 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-slate-750 transition-colors"
+                className={`mt-2 rounded-xl border border-slate-800 bg-slate-900/10 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 transition-colors ${themeBorderHover[settings.themeAccent]}`}
               >
                 <div
                   className="min-w-0 cursor-pointer text-left flex-1"
@@ -898,21 +934,21 @@ export default function ProfileView({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                   <button
                     onClick={() => {
                       setSelectedArticleId(art.id);
                       sessionStorage.setItem('detail_return_to', '/profile');
                       navigate(`/blog/${art.id}`);
                     }}
-                    className="p-1.5 text-slate-400 hover:text-white bg-slate-950 rounded-lg border border-slate-850 flex items-center gap-1 text-xs font-mono cursor-pointer"
+                    className={`w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white bg-slate-950 rounded-lg border border-slate-800 cursor-pointer transition-colors ${themeBorderHover[settings.themeAccent]}`}
+                    title="View"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    {t.profile.read}
                   </button>
                   <button
-                    onClick={() => handleDeletePublished(art.id)}
-                    className="p-1.5 text-slate-500 hover:text-red-400 bg-slate-950 rounded-lg border border-slate-850 cursor-pointer"
+                    onClick={() => setDeleteConfirm({ id: art.id, type: "article" })}
+                    className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-red-400 hover:border-red-500 bg-slate-950 rounded-lg border border-slate-800 cursor-pointer transition-colors"
                     title="Delete post"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -936,10 +972,10 @@ export default function ProfileView({
             drafts.map((draft) => (
               <div
                 key={draft.id}
-                className="rounded-xl border border-slate-800 bg-slate-900/10 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4"
+                className={`mt-2 rounded-xl border border-slate-800 bg-slate-900/10 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 transition-colors ${themeBorderHover[settings.themeAccent]}`}
               >
                 <div className="min-w-0 text-left flex-1 animate-fade-in">
-                  <span className="rounded bg-indigo-950/20 border border-indigo-900/30 px-1.5 py-0.5 text-[8px] font-mono text-indigo-400 uppercase">
+                  <span style={accentLinkColor ? { color: accentLinkColor, borderColor: accentLinkColor + "4D", backgroundColor: accentLinkColor + "14" } : undefined} className="rounded bg-indigo-950/20 border border-indigo-900/30 px-1.5 py-0.5 text-[8px] font-mono text-indigo-400 uppercase">
                     {draft.category}
                   </span>
                   <h3 className="text-sm font-semibold text-white mt-2 mb-1">
@@ -948,24 +984,77 @@ export default function ProfileView({
                   <p className="text-xs text-slate-500 font-mono">{t.profile.created.replace("{date}", draft.date)}</p>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                   <button
                     onClick={() => handlePublishDraft(draft)}
+                    style={getThemeBtnStyle()}
                     className={`px-3 py-1.5 rounded-lg text-white font-mono text-xs cursor-pointer ${themeAccentColors[settings.themeAccent]}`}
                   >
                     {t.profile.instantPublish}
                   </button>
-                  <button
-                    onClick={() => handleDeleteDraft(draft.id)}
-                    className="p-1.5 text-slate-500 hover:text-red-400 bg-slate-950 rounded-lg border border-slate-850 cursor-pointer"
-                    title="Remove draft"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        sessionStorage.setItem('edit_draft', JSON.stringify(draft));
+                        navigate('/blog/compose?edit=' + draft.id);
+                      }}
+                      className={`w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white bg-slate-950 rounded-lg border border-slate-800 cursor-pointer transition-colors ${themeBorderHover[settings.themeAccent]}`}
+                      title="Edit draft"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm({ id: draft.id, type: "draft" })}
+                      className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-red-400 hover:border-red-500 bg-slate-950 rounded-lg border border-slate-800 cursor-pointer transition-colors"
+                      title="Remove draft"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* 删除确认弹框 */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl w-1/2 max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-red-400" />
+              </div>
+              <h3 className="text-lg font-heading font-semibold text-white">
+                {deleteConfirm.type === "draft" ? t.profile.deleteDraft : t.profile.deleteArticle}
+              </h3>
+            </div>
+            <p className="text-sm text-slate-400 mb-6">
+              {deleteConfirm.type === "draft" ? t.profile.deleteDraftConfirm : t.profile.deleteArticleConfirm}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 cursor-pointer"
+              >
+                {t.profile.cancel}
+              </button>
+              <button
+                onClick={() => {
+                  if (deleteConfirm.type === "draft") {
+                    handleDeleteDraft(deleteConfirm.id);
+                  } else {
+                    handleDeletePublished(deleteConfirm.id);
+                  }
+                  setDeleteConfirm(null);
+                }}
+                className="px-4 py-2 rounded-lg text-sm text-white bg-red-500 hover:bg-red-600 cursor-pointer"
+              >
+                {t.profile.confirmDelete}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

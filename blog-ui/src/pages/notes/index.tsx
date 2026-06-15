@@ -223,7 +223,15 @@ export default function NotesView({
     cyan: "bg-cyan-600 hover:bg-cyan-500",
     violet: "bg-violet-600 hover:bg-violet-500",
     amber: "bg-amber-600 hover:bg-amber-500",
-    emerald: "bg-emerald-600 hover:bg-emerald-500"
+    emerald: "bg-emerald-600 hover:bg-emerald-500",
+    custom: "bg-slate-600 hover:bg-slate-500"
+  };
+
+  const getThemeBtnStyle = () => {
+    if (settings.themeAccent === "custom" && settings.themeAccentCustom) {
+      return { backgroundColor: settings.themeAccentCustom };
+    }
+    return {};
   };
 
   return (
@@ -241,6 +249,7 @@ export default function NotesView({
 
         <button
           onClick={handleCreateNote}
+          style={getThemeBtnStyle()}
           className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-mono font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]}`}
         >
           <Edit2 className="w-4 h-4" />
@@ -376,7 +385,8 @@ export default function NotesView({
                   <button
                     onClick={handleSaveNote}
                     disabled={isSaving}
-                    className="bg-slate-800 hover:bg-slate-700 text-white rounded-lg px-4.5 py-2 text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={getThemeBtnStyle()}
+                    className={`text-white rounded-lg px-4.5 py-2 text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${themeAccentColors[settings.themeAccent]}`}
                   >
                     {isSaving ? (
                       <>
@@ -470,7 +480,8 @@ export default function NotesView({
               <p className="text-xs text-slate-500 mt-1">{t.notes.selectInit}</p>
               <button
                 onClick={handleCreateNote}
-                className="mt-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg px-4 py-2 text-xs font-mono cursor-pointer"
+                style={getThemeBtnStyle()}
+                className={`mt-4 text-white rounded-lg px-4 py-2 text-xs font-mono cursor-pointer ${themeAccentColors[settings.themeAccent]}`}
               >
                 {t.notes.createNote}
               </button>

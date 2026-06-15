@@ -102,21 +102,22 @@ export default function SettingsView({
     }
   };
 
-  const setThemeAccent = async (theme: "cyan" | "violet" | "amber" | "emerald") => {
+  const setThemeAccent = async (theme: "cyan" | "violet" | "amber" | "emerald" | "custom", customHex?: string) => {
     setIsSaving(true);
     try {
+      const data: Record<string, any> = { theme_accent: theme };
+      if (theme === "custom" && customHex) {
+        data.theme_accent_custom = customHex;
+      }
       if (onUpdateSettings) {
-        const result = await onUpdateSettings({
-          theme_accent: theme,
-        });
-        
+        const result = await onUpdateSettings(data);
         if (result.success) {
-          setSettings((prev) => ({ ...prev, themeAccent: theme }));
-          triggerFeedback(t.settings.success.theme.replace("{theme}", theme.toUpperCase()));
+          setSettings((prev) => ({ ...prev, themeAccent: theme, themeAccentCustom: customHex || prev.themeAccentCustom }));
+          triggerFeedback(t.settings.success.theme.replace("{theme}", theme === "custom" ? customHex || "CUSTOM" : theme.toUpperCase()));
         }
       } else {
-        setSettings((prev) => ({ ...prev, themeAccent: theme }));
-        triggerFeedback(t.settings.success.theme.replace("{theme}", theme.toUpperCase()));
+        setSettings((prev) => ({ ...prev, themeAccent: theme, themeAccentCustom: customHex || prev.themeAccentCustom }));
+        triggerFeedback(t.settings.success.theme.replace("{theme}", theme === "custom" ? customHex || "CUSTOM" : theme.toUpperCase()));
       }
     } finally {
       setIsSaving(false);
@@ -149,18 +150,29 @@ export default function SettingsView({
     setTimeout(() => navigate("/"), 1200);
   };
 
+  const [customColor, setCustomColor] = useState(settings.themeAccentCustom || "#3b82f6");
+
   const paletteOptions = [
     { id: "cyan" as const, label: t.settings.theme.cyan, bgClass: "bg-cyan-500", borderClass: "border-cyan-500/20", colorText: "text-cyan-400" },
     { id: "violet" as const, label: t.settings.theme.violet, bgClass: "bg-violet-500", borderClass: "border-violet-500/20", colorText: "text-violet-400" },
     { id: "amber" as const, label: t.settings.theme.amber, bgClass: "bg-amber-500", borderClass: "border-amber-500/20", colorText: "text-amber-400" },
     { id: "emerald" as const, label: t.settings.theme.emerald, bgClass: "bg-emerald-500", borderClass: "border-emerald-500/20", colorText: "text-emerald-400" },
+    { id: "custom" as const, label: t.settings.theme.custom || "Custom", bgClass: "", borderClass: "border-slate-500/20", colorText: "text-slate-300" },
   ];
 
   const themeBtnColors = {
     cyan: "bg-cyan-600 hover:bg-cyan-500",
     violet: "bg-violet-600 hover:bg-violet-500",
     amber: "bg-amber-600 hover:bg-amber-500",
-    emerald: "bg-emerald-600 hover:bg-emerald-500"
+    emerald: "bg-emerald-600 hover:bg-emerald-500",
+    custom: "bg-slate-600 hover:bg-slate-500"
+  };
+
+  const getThemeBtnStyle = () => {
+    if (settings.themeAccent === "custom" && settings.themeAccentCustom) {
+      return { backgroundColor: settings.themeAccentCustom };
+    }
+    return {};
   };
 
   return (
@@ -178,8 +190,8 @@ export default function SettingsView({
       </div>
 
       {successMsg && (
-        <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-3.5 mb-6 text-center text-xs text-indigo-300 font-mono flex items-center justify-center gap-2 animate-pulse">
-          <CheckCircle className="w-4 h-4 text-indigo-400" />
+        <div style={settings.themeAccent === "custom" && settings.themeAccentCustom ? { borderColor: settings.themeAccentCustom + "33", backgroundColor: settings.themeAccentCustom + "14" } : undefined} className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-3.5 mb-6 text-center text-xs text-indigo-300 font-mono flex items-center justify-center gap-2 animate-pulse">
+          <CheckCircle style={settings.themeAccent === "custom" && settings.themeAccentCustom ? { color: settings.themeAccentCustom } : undefined} className="w-4 h-4 text-indigo-400" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -197,9 +209,44 @@ export default function SettingsView({
             {t.settings.theme.subtitle}
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {paletteOptions.map((opt) => {
               const active = settings.themeAccent === opt.id;
+              if (opt.id === "custom") {
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setThemeAccent("custom", customColor)}
+                    disabled={isSaving}
+                    className={`rounded-xl border p-4 text-center cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      active
+                        ? "border-slate-500/20 bg-slate-950 shadow-md scale-[1.02] ring-1 ring-slate-800"
+                        : "border-slate-850 bg-slate-900/10 hover:border-slate-805 hover:bg-slate-900/40"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="relative h-4.5 w-4.5">
+                        <input
+                          type="color"
+                          value={customColor}
+                          onChange={(e) => {
+                            setCustomColor(e.target.value);
+                            setThemeAccent("custom", e.target.value);
+                          }}
+                          className="absolute inset-0 w-full h-full rounded-full cursor-pointer opacity-0"
+                        />
+                        <div
+                          className="h-4.5 w-4.5 rounded-full border border-slate-600"
+                          style={{ backgroundColor: customColor }}
+                        />
+                      </div>
+                      <span className={`text-[10px] font-mono font-medium ${active ? "text-slate-300" : "text-slate-400"}`}>
+                        {opt.label}
+                      </span>
+                    </div>
+                  </button>
+                );
+              }
               return (
                 <button
                   key={opt.id}
@@ -350,6 +397,7 @@ export default function SettingsView({
             <button
               onClick={handleToggleDensity}
               disabled={isSaving}
+              style={settings.highDensityLayout && settings.themeAccent === "custom" && settings.themeAccentCustom ? { backgroundColor: settings.themeAccentCustom } : undefined}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
                 settings.highDensityLayout ? "bg-indigo-600" : "bg-slate-800"
               }`}

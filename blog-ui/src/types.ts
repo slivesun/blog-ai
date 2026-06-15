@@ -64,7 +64,8 @@ export interface UserProfile {
 export interface SystemSettings {
   allowNotifications: boolean;
   allowComments: boolean;
-  themeAccent: "cyan" | "violet" | "amber" | "emerald";
+  themeAccent: "cyan" | "violet" | "amber" | "emerald" | "custom";
+  themeAccentCustom?: string;
   highDensityLayout: boolean;
   skin: "dark" | "light";
 }

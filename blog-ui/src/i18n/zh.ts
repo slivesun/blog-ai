@@ -120,6 +120,7 @@ export const translations = {
       },
     },
     publishBtn: "发布文章",
+    updateBtn: "更新文章",
     detail: {
       comments: "评论",
       postAs: "以 {name} 身份评论",
@@ -383,6 +384,11 @@ export const translations = {
     uploadFailed: "图片上传失败",
     uploadTooLarge: "图片文件过大，请压缩后重试（最大 10MB）",
     read: "查看",
+    deleteArticle: "删除文章",
+    deleteDraft: "删除草稿",
+    deleteArticleConfirm: "确定要删除这篇文章吗？此操作不可撤销。",
+    deleteDraftConfirm: "确定要删除这个草稿吗？此操作不可撤销。",
+    confirmDelete: "确认删除",
     instantPublish: "立即发布",
     created: "创建于 {date}",
   },
@@ -411,6 +417,7 @@ export const translations = {
       violet: "紫色",
       amber: "琥珀",
       emerald: "绿色",
+      custom: "自定义",
     },
     skin: {
       title: "外观",

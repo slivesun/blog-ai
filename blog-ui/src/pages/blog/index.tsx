@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { BlogArticle, BlogComment, ActivePath, SystemSettings, UserProfile } from "../../types";
 import { Heart, MessageSquare, ArrowLeft, Send, Sparkles, Plus, CheckCircle, ChevronRight, Share2, Loader2 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
@@ -44,6 +44,8 @@ export default function BlogView({
   const { showMessage } = useToast();
   const navigate = useNavigate();
   const { id: urlArticleId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const editDraftId = searchParams.get('edit');
   const [commentText, setCommentText] = useState("");
 
   const [newTitle, setNewTitle] = useState("");
@@ -54,6 +56,28 @@ export default function BlogView({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+
+  // 编辑草稿：从 sessionStorage 加载草稿数据
+  useEffect(() => {
+    if (editDraftId && currentPath === "blog-compose") {
+      const raw = sessionStorage.getItem('edit_draft');
+      if (raw) {
+        try {
+          const draft = JSON.parse(raw);
+          setNewTitle(draft.title || "");
+          setNewAbstract(draft.abstract || "");
+          setNewContent(draft.content || "");
+          setNewCoverImage(draft.coverImage || "");
+          setNewCategory(draft.category || "Engineering");
+          setEditingDraftId(draft.id);
+        } catch (e) {
+          console.error("Failed to load draft:", e);
+        }
+        sessionStorage.removeItem('edit_draft');
+      }
+    }
+  }, [editDraftId, currentPath]);
 
   const [visibleCount, setVisibleCount] = useState(9);
   const [hasMore, setHasMore] = useState(true);
@@ -193,14 +217,20 @@ export default function BlogView({
     setIsSubmitting(true);
     try {
       const { articleApi } = await import("../../api");
-      const result = await articleApi.createArticle({
+      const draftData = {
         title: newTitle,
         abstract: newAbstract,
         content: newContent,
         category_id: getCategoryId(newCategory),
         is_draft: true,
         cover_image: newCoverImage || undefined,
-      });
+      };
+      let result;
+      if (editingDraftId) {
+        result = await articleApi.updateArticle(Number(editingDraftId), draftData);
+      } else {
+        result = await articleApi.createArticle(draftData);
+      }
       if (result.success) {
         showMessage(t.blog.draftSaved || "草稿已保存", "success");
         navigate("/profile", { state: { tab: "drafts" } });
@@ -218,27 +248,34 @@ export default function BlogView({
 
     setIsSubmitting(true);
     try {
-      if (onCreateArticle) {
-        const result = await onCreateArticle({
-          title: newTitle,
-          abstract: newAbstract,
-          content: newContent,
-          category_id: getCategoryId(newCategory),
-          is_draft: false,
-          cover_image: newCoverImage || undefined,
-        });
+      const { articleApi } = await import("../../api");
+      const articleData = {
+        title: newTitle,
+        abstract: newAbstract,
+        content: newContent,
+        category_id: getCategoryId(newCategory),
+        is_draft: false,
+        cover_image: newCoverImage || undefined,
+      };
 
-        if (result.success) {
-          setSubmitSuccess(true);
-          setTimeout(() => {
-            setNewTitle("");
-            setNewAbstract("");
-            setNewContent("");
-            setNewCoverImage("");
-            setSubmitSuccess(false);
-            navigate("/blog");
-          }, 1500);
-        }
+      let result;
+      if (editingDraftId) {
+        result = await articleApi.updateArticle(Number(editingDraftId), articleData);
+      } else if (onCreateArticle) {
+        result = await onCreateArticle(articleData);
+      }
+
+      if (result && result.success) {
+        setSubmitSuccess(true);
+        setEditingDraftId(null);
+        setTimeout(() => {
+          setNewTitle("");
+          setNewAbstract("");
+          setNewContent("");
+          setNewCoverImage("");
+          setSubmitSuccess(false);
+          navigate("/blog");
+        }, 1500);
       } else {
         // Fallback to local state
         const coverUrls: Record<string, string> = {
@@ -310,6 +347,14 @@ export default function BlogView({
     violet: "bg-violet-600 hover:bg-violet-500 shadow-violet-950/20",
     amber: "bg-amber-600 hover:bg-amber-500 shadow-amber-950/20",
     emerald: "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-950/20",
+    custom: "bg-slate-600 hover:bg-slate-500 shadow-slate-950/20",
+  };
+
+  const getThemeBtnStyle = () => {
+    if (settings.themeAccent === "custom" && settings.themeAccentCustom) {
+      return { backgroundColor: settings.themeAccentCustom };
+    }
+    return {};
   };
 
   if (currentPath === "blog-detail" && activeArticle) {
@@ -448,7 +493,7 @@ export default function BlogView({
                     {t.blog.detail.postAs.replace("{name}", profile.name)}
                   </span>
                   <button
-                    style={{ marginTop: "16px" }}
+                    style={{ marginTop: "16px", ...getThemeBtnStyle() }}
                     type="submit"
                     disabled={isSubmittingComment || !commentText.trim()}
                     className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg text-white transition-all cursor-pointer ${themeBtnColors[settings.themeAccent]} ${(isSubmittingComment || !commentText.trim()) ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -466,6 +511,7 @@ export default function BlogView({
                   localStorage.setItem('login_redirect', window.location.pathname);
                   navigate("/profile");
                 }}
+                style={getThemeBtnStyle()}
                 className={`w-full flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3 rounded-xl text-white transition-all cursor-pointer ${themeBtnColors[settings.themeAccent]}`}
               >
                 <Send className="w-4 h-4" />
@@ -650,6 +696,7 @@ export default function BlogView({
               <button
                 type="submit"
                 disabled={isSubmitting}
+                style={getThemeBtnStyle()}
                 className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-xs font-semibold text-white transition-all cursor-pointer ${themeBtnColors[settings.themeAccent]} ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {isSubmitting ? (
@@ -660,7 +707,7 @@ export default function BlogView({
                 ) : (
                   <>
                     <Sparkles className="w-3.5 h-3.5" />
-                    {t.blog.publishBtn}
+                    {editingDraftId ? (t.blog.updateBtn || "Update") : t.blog.publishBtn}
                   </>
                 )}
               </button>
@@ -688,7 +735,8 @@ export default function BlogView({
 
           <button
             onClick={() => navigate("/blog/compose")}
-            className="flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-xs font-mono text-white transition-all hover:scale-[1.01] cursor-pointer"
+            style={getThemeBtnStyle()}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-mono text-white transition-all hover:scale-[1.01] cursor-pointer ${themeBtnColors[settings.themeAccent]}`}
           >
             <Plus className="w-4 h-4" />
             {t.blog.publish}
@@ -696,9 +744,9 @@ export default function BlogView({
         </div>
 
         {settings.highDensityLayout && (
-          <div className="rounded-xl border border-indigo-500/20 bg-slate-950/40 p-4 mb-8 flex items-center justify-between text-xs text-slate-400">
+          <div style={settings.themeAccent === "custom" && settings.themeAccentCustom ? { borderColor: settings.themeAccentCustom + "33" } : undefined} className="rounded-xl border border-indigo-500/20 bg-slate-950/40 p-4 mb-8 flex items-center justify-between text-xs text-slate-400">
             <span className="font-mono">{t.blog.connectionStatus}</span>
-            <Share2 className="w-4 h-4 text-indigo-400" />
+            <Share2 style={settings.themeAccent === "custom" && settings.themeAccentCustom ? { color: settings.themeAccentCustom } : undefined} className="w-4 h-4 text-indigo-400" />
           </div>
         )}
 

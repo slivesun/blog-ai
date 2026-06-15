@@ -648,11 +648,24 @@
 .hover\:bg-slate-900\/30:hover { background-color: rgba($slate-900, 0.3); }
 .hover\:bg-slate-900\/40:hover { background-color: rgba($slate-900, 0.4); }
 .hover\:bg-slate-950:hover { background-color: $slate-950; }
+.hover\:bg-cyan-500:hover { background-color: $cyan-500; }
+.hover\:bg-cyan-600:hover { background-color: #0891b2; }
+.hover\:bg-violet-500:hover { background-color: $violet-500; }
+.hover\:bg-violet-600:hover { background-color: #7c3aed; }
+.hover\:bg-amber-500:hover { background-color: $amber-500; }
+.hover\:bg-amber-600:hover { background-color: #d97706; }
+.hover\:bg-emerald-500:hover { background-color: $emerald-500; }
+.hover\:bg-emerald-600:hover { background-color: #059669; }
 .hover\:border-slate-600:hover { border-color: $slate-600; }
 .hover\:border-slate-700:hover { border-color: var(--c-border-hover); }
 .hover\:border-slate-750:hover { border-color: $slate-750; }
 .hover\:border-slate-800:hover { border-color: var(--c-border); }
 .hover\:border-slate-805:hover { border-color: #1a1a24; }
+.hover\:border-cyan-500:hover { border-color: $cyan-500; }
+.hover\:border-violet-500:hover { border-color: $violet-500; }
+.hover\:border-amber-500:hover { border-color: $amber-500; }
+.hover\:border-emerald-500:hover { border-color: $emerald-500; }
+.hover\:border-red-500:hover { border-color: $red-500; }
 .hover\:underline:hover { text-decoration: underline; }
 .hover\:scale-102:hover { transform: scale(1.02); }
 .hover\:scale-105:hover { transform: scale(1.05); }

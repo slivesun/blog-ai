@@ -22,26 +22,33 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
     "notes": "/notes",
   };
 
-  const accentTextColors = {
+  const accentTextColors: Record<string, string> = {
     cyan: "text-cyan-400 group-hover:text-cyan-300",
     violet: "text-violet-400 group-hover:text-violet-300",
     amber: "text-amber-400 group-hover:text-amber-300",
     emerald: "text-emerald-400 group-hover:text-emerald-300",
+    custom: "text-blue-400 group-hover:text-blue-300",
   };
 
-  const accentBorderColors = {
+  const accentBorderColors: Record<string, string> = {
     cyan: "hover:border-cyan-500/30 group-hover:border-cyan-500/20",
     violet: "hover:border-violet-500/30 group-hover:border-violet-500/20",
     amber: "hover:border-amber-500/30 group-hover:border-amber-500/20",
     emerald: "hover:border-emerald-500/30 group-hover:border-emerald-500/20",
+    custom: "hover:border-blue-500/30 group-hover:border-blue-500/20",
   };
 
-  const accentGradients = {
+  const accentGradients: Record<string, string> = {
     cyan: "from-cyan-500/10 via-cyan-950/5 to-transparent",
     violet: "from-violet-500/10 via-violet-950/5 to-transparent",
     amber: "from-amber-500/10 via-amber-950/5 to-transparent",
     emerald: "from-emerald-500/10 via-emerald-950/5 to-transparent",
+    custom: "from-blue-500/10 via-blue-950/5 to-transparent",
   };
+
+  const isCustom = settings.themeAccent === "custom" && settings.themeAccentCustom;
+  const accentInlineColor = isCustom ? settings.themeAccentCustom : undefined;
+  const accentTextStyle: React.CSSProperties | undefined = isCustom ? { color: settings.themeAccentCustom } : undefined;
 
   const cards = [
     {
@@ -107,7 +114,10 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                   : "border-slate-800 bg-slate-900/20 hover:border-slate-700 hover:bg-slate-900/40"
               } p-6 sm:p-8 transition-all duration-300 hover:translate-y-[-4px] cursor-pointer`}
             >
-              <div className={`absolute inset-0 rounded-2xl bg-gradient-to-b opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${accentGradients[settings.themeAccent]}`} />
+              <div
+                className={`absolute inset-0 rounded-2xl bg-gradient-to-b opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${accentGradients[settings.themeAccent]}`}
+                style={isCustom ? { background: `linear-gradient(to bottom, ${settings.themeAccentCustom}1a, ${settings.themeAccentCustom}0d, transparent)` } : undefined}
+              />
 
               <div>
                 <div className="flex items-center justify-between mb-6 relative">
@@ -128,10 +138,10 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
               </div>
 
               <div className="flex items-center gap-2 mt-auto relative z-10">
-                <span className={`text-sm font-medium transition-colors ${accentTextColors[settings.themeAccent]}`}>
+                <span style={accentTextStyle} className={`text-sm font-medium transition-colors ${accentTextColors[settings.themeAccent]}`}>
                   {card.actionLabel}
                 </span>
-                <ArrowRight className={`w-4 h-4 transition-transform group-hover:translate-x-1.5 ${accentTextColors[settings.themeAccent]}`} />
+                <ArrowRight style={accentTextStyle} className={`w-4 h-4 transition-transform group-hover:translate-x-1.5 ${accentTextColors[settings.themeAccent]}`} />
               </div>
             </Link>
           );
@@ -155,6 +165,7 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
               </div>
               <button
                 onClick={() => setShowQR(true)}
+                style={accentInlineColor ? { color: accentInlineColor } : undefined}
                 className="hidden sm:flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
               >
                 <Share2 className="w-4 h-4" />
@@ -163,7 +174,7 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="blueprint-grid">
-              
+
               <div className="rounded-xl border border-slate-800 bg-slate-900/30 p-4 relative group hover:border-indigo-400/50 transition-all">
                 <CornerRightDown className="absolute top-3 right-3 w-4 h-4 text-slate-600 group-hover:text-indigo-400" />
                 <span className="text-[10px] font-mono text-slate-500">ROOT // ENTRY</span>
@@ -171,6 +182,7 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 <p className="text-[11px] text-slate-400 mt-1">{t.home.journeyMap.entry.desc}</p>
                 <Link
                   to="/"
+                  style={accentInlineColor ? { color: accentInlineColor } : undefined}
                   className="mt-3 text-xs text-indigo-400 font-mono flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   {t.home.journeyMap.entry.jump}
@@ -184,6 +196,7 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 <p className="text-[11px] text-slate-400 mt-1">{t.home.journeyMap.blog.desc}</p>
                 <Link
                   to="/blog"
+                  style={accentInlineColor ? { color: accentInlineColor } : undefined}
                   className="mt-3 text-xs text-indigo-400 font-mono flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   {t.home.journeyMap.blog.jump}
@@ -197,6 +210,7 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 <p className="text-[11px] text-slate-400 mt-1">{t.home.journeyMap.dev.desc}</p>
                 <Link
                   to="/dev-tools"
+                  style={accentInlineColor ? { color: accentInlineColor } : undefined}
                   className="mt-3 text-xs text-indigo-400 font-mono flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   {t.home.journeyMap.dev.jump}
@@ -210,6 +224,7 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 <p className="text-[11px] text-slate-400 mt-1">{t.home.journeyMap.notes.desc}</p>
                 <Link
                   to="/notes"
+                  style={accentInlineColor ? { color: accentInlineColor } : undefined}
                   className="mt-3 text-xs text-indigo-400 font-mono flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   {t.home.journeyMap.notes.jump}
@@ -253,7 +268,7 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                 <QRCodeSVG value={siteUrl} size={180} level="M" />
               </div>
               <p className="text-xs text-slate-400 font-mono">{t.home.scanToVisit}</p>
-              <p className="text-sm text-indigo-400 font-mono">{siteUrl}</p>
+              <p style={accentInlineColor ? { color: accentInlineColor } : undefined} className="text-sm text-indigo-400 font-mono">{siteUrl}</p>
             </div>
           </div>
         </div>

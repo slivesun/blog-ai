@@ -93,6 +93,7 @@ export function transformSettings(apiSettings: any): SystemSettings {
     allowNotifications: apiSettings.allow_notifications ?? true,
     allowComments: apiSettings.allow_comments ?? true,
     themeAccent: apiSettings.theme_accent || "cyan",
+    themeAccentCustom: apiSettings.theme_accent_custom || undefined,
     highDensityLayout: apiSettings.high_density_layout || false,
     skin: apiSettings.skin || "dark"
   };

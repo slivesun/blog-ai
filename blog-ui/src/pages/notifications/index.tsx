@@ -34,6 +34,10 @@ export default function NotificationsView({
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
+  const accentLinkColor = settings.themeAccent === "custom" && settings.themeAccentCustom
+    ? settings.themeAccentCustom
+    : undefined;
+
   const handleClearAll = () => {
     setNotifications([]);
   };
@@ -167,6 +171,7 @@ export default function NotificationsView({
                   {notif.linkToId ? (
                     <button
                       onClick={() => handleActionClick(notif)}
+                      style={accentLinkColor ? { color: accentLinkColor } : undefined}
                       className="text-xs font-mono text-indigo-400 hover:text-indigo-300 flex items-center gap-1 hover:underline cursor-pointer"
                     >
                       {t.notifications.inspect}

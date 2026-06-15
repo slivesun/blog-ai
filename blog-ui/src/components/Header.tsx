@@ -54,20 +54,25 @@ export default function Header({
     cyan: "text-cyan-400 font-medium",
     violet: "text-violet-400 font-medium",
     amber: "text-amber-400 font-medium",
-    emerald: "text-emerald-400 font-medium"
+    emerald: "text-emerald-400 font-medium",
+    custom: "text-slate-300 font-medium"
   };
 
   const activeAccentBg = {
     cyan: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20",
     violet: "bg-violet-500/10 text-violet-400 border border-violet-500/20",
     amber: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-    emerald: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+    emerald: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+    custom: "bg-slate-500/10 text-slate-300 border border-slate-500/20"
   };
+
+  const isCustom = settings.themeAccent === "custom" && settings.themeAccentCustom;
+  const customColor = isCustom ? settings.themeAccentCustom : undefined;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-900/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        
+
         <div className="flex items-center gap-8">
           <Link
             id="header-nav-logo"
@@ -75,8 +80,14 @@ export default function Header({
             className="flex items-center gap-2.5 transition-transform hover:scale-[1.02] text-left"
           >
             <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700">
-              <div className={`absolute inset-[6px] rounded-sm border-2 border-dashed ${settings.themeAccent === "cyan" ? "border-cyan-500/40" : settings.themeAccent === "violet" ? "border-violet-500/40" : settings.themeAccent === "amber" ? "border-amber-500/40" : "border-emerald-500/40"}`} />
-              <div className={`h-2.5 w-2.5 rounded-full ${settings.themeAccent === "cyan" ? "bg-cyan-400" : settings.themeAccent === "violet" ? "bg-violet-400" : settings.themeAccent === "amber" ? "bg-amber-400" : "bg-emerald-400"} animate-pulse`} />
+              <div
+                className={`absolute inset-[6px] rounded-sm border-2 border-dashed ${settings.themeAccent === "cyan" ? "border-cyan-500/40" : settings.themeAccent === "violet" ? "border-violet-500/40" : settings.themeAccent === "amber" ? "border-amber-500/40" : settings.themeAccent === "emerald" ? "border-emerald-500/40" : "border-slate-500/40"}`}
+                style={settings.themeAccent === "custom" && settings.themeAccentCustom ? { borderColor: settings.themeAccentCustom + "66" } : {}}
+              />
+              <div
+                className={`h-2.5 w-2.5 rounded-full ${settings.themeAccent === "cyan" ? "bg-cyan-400" : settings.themeAccent === "violet" ? "bg-violet-400" : settings.themeAccent === "amber" ? "bg-amber-400" : settings.themeAccent === "emerald" ? "bg-emerald-400" : "bg-slate-400"} animate-pulse`}
+                style={settings.themeAccent === "custom" && settings.themeAccentCustom ? { backgroundColor: settings.themeAccentCustom } : {}}
+              />
             </div>
             <div>
               <span className="font-heading text-lg font-bold tracking-tight text-white">PortalCore</span>
@@ -92,6 +103,7 @@ export default function Header({
                   key={item.path}
                   id={`header-nav-link-${item.path}`}
                   to={item.route}
+                  style={isActive && isCustom ? { color: customColor, backgroundColor: customColor + "1a", borderColor: customColor + "33" } : undefined}
                   className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
                     isActive
                       ? activeAccentBg[settings.themeAccent]
@@ -173,6 +185,7 @@ export default function Header({
               <Link
                 id="header-profile-btn"
                 to="/profile"
+                style={currentPath === "profile" && isCustom ? { borderColor: customColor + "99" } : undefined}
                 className={`flex items-center gap-2 rounded-full border p-0.5 transition-all outline-none ${
                   currentPath === "profile"
                     ? `border-${settings.themeAccent}-500/60 ring-2 ring-${settings.themeAccent}-500/10`
@@ -207,6 +220,7 @@ export default function Header({
             <Link
               key={item.path}
               to={item.route}
+              style={isActive && isCustom ? { color: customColor } : undefined}
               className={`flex flex-col items-center gap-0.5 rounded-md px-3 py-1 text-[10px] font-mono transition-colors ${
                 isActive
                   ? activeAccentText[settings.themeAccent]

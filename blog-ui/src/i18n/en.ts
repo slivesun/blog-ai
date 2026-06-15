@@ -124,6 +124,7 @@ export const translations = {
       },
     },
     publishBtn: "Publish Document",
+    updateBtn: "Update Document",
     detail: {
       comments: "Comment Stream",
       postAs: "Posting as {name}",
@@ -390,6 +391,11 @@ export const translations = {
     uploadFailed: "Image upload failed",
     uploadTooLarge: "Image file is too large, please compress it first (max 10MB)",
     read: "Read",
+    deleteArticle: "Delete Article",
+    deleteDraft: "Delete Draft",
+    deleteArticleConfirm: "Are you sure you want to delete this article? This action cannot be undone.",
+    deleteDraftConfirm: "Are you sure you want to delete this draft? This action cannot be undone.",
+    confirmDelete: "Confirm Delete",
     instantPublish: "Instantly Publish",
     created: "Created {date}",
   },
@@ -420,6 +426,7 @@ export const translations = {
       violet: "Violet Obsidian",
       amber: "Solar Amber",
       emerald: "Emerald Terminal",
+      custom: "Custom",
     },
     skin: {
       title: "Skin",

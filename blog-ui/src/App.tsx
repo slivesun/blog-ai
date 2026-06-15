@@ -218,10 +218,18 @@ export default function App() {
     }
   }, [currentPath, profileLoaded, notesLoaded, notificationsLoaded]);
 
-  // Sync settings to localStorage and apply skin class
+  // Sync settings to localStorage and apply skin class + custom theme color
   useEffect(() => {
     localStorage.setItem("portalcore_settings", JSON.stringify(settings));
     document.body.classList.toggle("skin-light", settings.skin === "light");
+    // 自定义主题色：覆盖 CSS 变量
+    if (settings.themeAccent === "custom" && settings.themeAccentCustom) {
+      document.documentElement.style.setProperty("--accent-color", settings.themeAccentCustom);
+      document.body.classList.add("theme-custom");
+    } else {
+      document.documentElement.style.removeProperty("--accent-color");
+      document.body.classList.remove("theme-custom");
+    }
   }, [settings]);
 
   // Reset defaults
@@ -454,7 +462,8 @@ export default function App() {
     cyan: "selection:bg-cyan-500/30 selection:text-cyan-200",
     violet: "selection:bg-violet-500/30 selection:text-violet-200",
     amber: "selection:bg-amber-500/30 selection:text-amber-200",
-    emerald: "selection:bg-emerald-500/30 selection:text-emerald-200"
+    emerald: "selection:bg-emerald-500/30 selection:text-emerald-200",
+    custom: "selection:bg-slate-500/30 selection:text-slate-200"
   };
 
   return (
@@ -462,7 +471,10 @@ export default function App() {
 
       {/* Dynamic Progress indicator */}
       <div className={`h-[1.5px] w-full bg-slate-900 overflow-hidden relative`}>
-        <div className={`absolute top-0 bottom-0 left-0 w-2/3 ${settings.themeAccent === "cyan" ? "bg-cyan-500" : settings.themeAccent === "violet" ? "bg-violet-500" : settings.themeAccent === "amber" ? "bg-amber-500" : "bg-emerald-500"} animate-pulse`} />
+        <div
+          className={`absolute top-0 bottom-0 left-0 w-2/3 ${settings.themeAccent === "cyan" ? "bg-cyan-500" : settings.themeAccent === "violet" ? "bg-violet-500" : settings.themeAccent === "amber" ? "bg-amber-500" : settings.themeAccent === "emerald" ? "bg-emerald-500" : "bg-slate-500"} animate-pulse`}
+          style={settings.themeAccent === "custom" && settings.themeAccentCustom ? { backgroundColor: settings.themeAccentCustom } : {}}
+        />
       </div>
 
       {/* Header */}

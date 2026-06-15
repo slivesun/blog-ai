@@ -72,7 +72,8 @@ class UserSettingsBase(BaseModel):
     """用户设置基础模式"""
     allow_notifications: bool = True
     allow_comments: bool = True
-    theme_accent: str = Field(default="cyan", pattern="^(cyan|violet|amber|emerald)$")
+    theme_accent: str = Field(default="cyan", pattern="^(cyan|violet|amber|emerald|custom)$")
+    theme_accent_custom: Optional[str] = Field(None, max_length=9, description="自定义主题色 HEX，如 #3b82f6")
     high_density_layout: bool = False
     language: str = Field(default="zh", pattern="^(zh|en)$")
     skin: str = Field(default="dark", pattern="^(dark|light)$")
