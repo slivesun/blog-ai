@@ -465,14 +465,45 @@ async function compressImage(file: File): Promise<File> {
   });
 }
 
+// 计算文件 SHA-256 hash
+async function computeFileHash(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 // 文件上传 API
 export const uploadApi = {
   async uploadImage(file: File): Promise<ApiResponse<{ url: string }>> {
+    // 1. 计算原始文件 hash
+    const hash = await computeFileHash(file);
+
+    // 2. 检查是否已存在
+    const token = localStorage.getItem('blog_access_token');
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+
+    try {
+      const checkRes = await fetch(`${API_BASE_URL}/upload/check`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ hash }),
+      });
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (checkData.data?.exists && checkData.data?.url) {
+          return { success: true, data: { url: checkData.data.url }, message: "Image already exists" };
+        }
+      }
+    } catch {
+      // check 失败不影响上传流程
+    }
+
+    // 3. 不存在，压缩后上传，附带原始 hash
     const compressed = await compressImage(file);
     const formData = new FormData();
     formData.append('file', compressed);
+    formData.append('hash', hash);
 
-    const token = localStorage.getItem('blog_access_token');
     const response = await fetch(`${API_BASE_URL}/upload/image`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},

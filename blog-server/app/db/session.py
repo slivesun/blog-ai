@@ -65,5 +65,5 @@ def init_db() -> None:
     初始化数据库
     创建所有表结构
     """
-    from app.models import user, article, comment, category, tag, note, notification, settings as user_settings
+    from app.models import user, article, comment, category, tag, note, notification, settings as user_settings, image
     Base.metadata.create_all(bind=engine)
