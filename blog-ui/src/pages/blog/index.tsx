@@ -583,9 +583,12 @@ export default function BlogView({
                       const result = await uploadApi.uploadImage(file);
                       if (result.success && result.data) {
                         setNewCoverImage(result.data.url);
+                      } else {
+                        alert(result.message?.includes("too large") ? t.profile.uploadTooLarge : t.profile.uploadFailed);
                       }
                     } catch (err) {
                       console.error("Cover upload failed:", err);
+                      alert(t.profile.uploadFailed);
                     } finally {
                       setIsUploadingCover(false);
                     }

@@ -21,7 +21,7 @@ router = APIRouter()
 # 上传配置（与 main.py 的 StaticFiles 挂载路径一致）
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "uploads", "images")
 UPLOAD_DIR = os.path.normpath(UPLOAD_DIR)
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB（压缩前）
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB（压缩前）
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 
 # 压缩配置
@@ -78,7 +78,7 @@ async def upload_image(
     上传图片（自动压缩）
 
     参数:
-        file: 图片文件（jpg/png/gif/webp，最大5MB）
+        file: 图片文件（jpg/png/gif/webp，最大10MB）
 
     返回:
         DataResponse: 包含图片访问URL
@@ -97,7 +97,7 @@ async def upload_image(
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File size exceeds 5MB limit"
+            detail="File size exceeds 10MB limit"
         )
 
     # 压缩图片

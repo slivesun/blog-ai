@@ -616,9 +616,12 @@ export default function ProfileView({
                     if (updateResult.success) {
                       setProfile({ ...profile, avatarUrl: uploadResult.data.url });
                     }
+                  } else {
+                    alert(uploadResult.message?.includes("too large") ? t.profile.uploadTooLarge : t.profile.uploadFailed);
                   }
                 } catch (err) {
                   console.error("Avatar upload failed:", err);
+                  alert(t.profile.uploadFailed);
                 }
                 e.target.value = '';
               }}

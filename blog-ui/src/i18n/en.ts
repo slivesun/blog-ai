@@ -386,6 +386,8 @@ export const translations = {
     cancel: "Cancel",
     nickname: "Nickname",
     displayName: "Display Name",
+    uploadFailed: "Image upload failed",
+    uploadTooLarge: "Image file is too large, please compress it first (max 10MB)",
     read: "Read",
     instantPublish: "Instantly Publish",
     created: "Created {date}",

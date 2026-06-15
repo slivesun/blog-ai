@@ -379,6 +379,8 @@ export const translations = {
     cancel: "取消",
     nickname: "昵称",
     displayName: "显示名称",
+    uploadFailed: "图片上传失败",
+    uploadTooLarge: "图片文件过大，请压缩后重试（最大 10MB）",
     read: "查看",
     instantPublish: "立即发布",
     created: "创建于 {date}",
