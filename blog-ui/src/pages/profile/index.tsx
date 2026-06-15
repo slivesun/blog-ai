@@ -879,7 +879,7 @@ export default function ProfileView({
             userPublishedArticles.map((art) => (
               <div
                 key={art.id}
-                className="rounded-xl border border-slate-800 bg-slate-900/10 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-slate-750 transition-colors"
+                className="mt-2 rounded-xl border border-slate-800 bg-slate-900/10 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-slate-750 transition-colors"
               >
                 <div
                   className="min-w-0 cursor-pointer text-left flex-1"

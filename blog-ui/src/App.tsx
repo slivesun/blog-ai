@@ -104,9 +104,9 @@ export default function App() {
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
-  // Load articles on blog pages only
+  // Load articles on blog and profile pages
   useEffect(() => {
-    if ((currentPath === "blog" || currentPath === "blog-detail" || currentPath === "blog-compose") && !articlesLoaded) {
+    if ((currentPath === "blog" || currentPath === "blog-detail" || currentPath === "blog-compose" || currentPath === "profile") && !articlesLoaded) {
       const loadArticles = async () => {
         try {
           const response = await articleApi.getArticles({ page_size: 50 });
