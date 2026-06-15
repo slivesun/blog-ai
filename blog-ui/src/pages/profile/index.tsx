@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { UserProfile, BlogArticle, ActivePath, SystemSettings } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
@@ -44,15 +45,25 @@ export default function ProfileView({
 }: ProfileProps) {
   const { t } = useLanguage();
   const { showMessage } = useToast();
+  const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [newNickname, setNewNickname] = useState(profile.nickname || "");
-  const [newName, setNewName] = useState(profile.fullName || "");
-  const [newRole, setNewRole] = useState(profile.role);
   const [newBio, setNewBio] = useState(profile.bio);
+  const [newGithubUrl, setNewGithubUrl] = useState(profile.githubUrl || "");
+  const [newEmail, setNewEmail] = useState(profile.email || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
+
+  // 从导航状态读取 tab
+  useEffect(() => {
+    const state = location.state as { tab?: string } | null;
+    if (state?.tab === "drafts") {
+      setActiveTab("drafts");
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Auth states
   const [showPassword, setShowPassword] = useState(false);
@@ -66,10 +77,29 @@ export default function ProfileView({
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
-  const [simulatedDrafts, setSimulatedDrafts] = useState<{ id: string; title: string; category: string; date: string }[]>([
-    { id: "draft-1", title: "Review of Container Limits in Cloud sandboxes", category: "Systems", date: "June 03, 2024" },
-    { id: "draft-2", title: "Visual contrast alignment requirements", category: "Design", date: "May 29, 2024" }
-  ]);
+  const [drafts, setDrafts] = useState<BlogArticle[]>([]);
+  const [draftsLoaded, setDraftsLoaded] = useState(false);
+
+  // 加载草稿
+  useEffect(() => {
+    if (!isLoggedIn || draftsLoaded) return;
+    const loadDrafts = async () => {
+      try {
+        const { articleApi } = await import("../../api");
+        const { transformArticle } = await import("../../dataTransform");
+        const response = await articleApi.getArticles({ page_size: 50, include_drafts: true });
+        if (response.success && response.data) {
+          const allArticles = response.data.articles.map(transformArticle);
+          setDrafts(allArticles.filter((a: BlogArticle) => a.isDraft));
+        }
+      } catch (e) {
+        console.error("Failed to load drafts:", e);
+      } finally {
+        setDraftsLoaded(true);
+      }
+    };
+    loadDrafts();
+  }, [isLoggedIn, draftsLoaded]);
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
@@ -77,20 +107,18 @@ export default function ProfileView({
       if (onUpdateProfile) {
         const updateData: Record<string, any> = {
           nickname: newNickname || undefined,
-          full_name: newName || undefined,
           bio: newBio,
+          github_url: newGithubUrl || undefined,
         };
-        if (profile.githubUrl) updateData.github_url = profile.githubUrl;
-
         const result = await onUpdateProfile(updateData);
 
         if (result.success) {
           setProfile({
             ...profile,
             nickname: newNickname || undefined,
-            fullName: newName,
-            name: newNickname || newName || profile.username || "User",
-            bio: newBio
+            name: newNickname || profile.username || "User",
+            bio: newBio,
+            githubUrl: newGithubUrl || undefined,
           });
           setIsEditing(false);
         }
@@ -98,10 +126,9 @@ export default function ProfileView({
         setProfile({
           ...profile,
           nickname: newNickname || undefined,
-          fullName: newName,
-          name: newNickname || newName || profile.username || "User",
-          role: newRole,
-          bio: newBio
+          name: newNickname || profile.username || "User",
+          bio: newBio,
+          githubUrl: newGithubUrl || undefined,
         });
         setIsEditing(false);
       }
@@ -121,29 +148,31 @@ export default function ProfileView({
     }
   };
 
-  const handleDeleteDraft = (id: string) => {
-    setSimulatedDrafts((prev) => prev.filter((d) => d.id !== id));
+  const handleDeleteDraft = async (id: string) => {
+    try {
+      const { articleApi } = await import("../../api");
+      const result = await articleApi.deleteArticle(Number(id));
+      if (result.success) {
+        setDrafts((prev) => prev.filter((d) => d.id !== id));
+      }
+    } catch (e) {
+      console.error("Failed to delete draft:", e);
+    }
   };
 
-  const handlePublishDraft = (draft: { id: string; title: string; category: string; date: string }) => {
-    const newArticle: BlogArticle = {
-      id: `post-${Date.now()}`,
-      title: draft.title,
-      abstract: "Published from pre-saved user documentation draft.",
-      content: "This document details the critical limits verified during internal container runtime examinations on port 3000.",
-      category: draft.category,
-      author: profile.name,
-      authorRole: profile.role,
-      authorAvatar: profile.avatarUrl,
-      date: draft.date,
-      coverImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop",
-      likes: 1,
-      comments: [],
-      isUserPublished: true
-    };
-
-    setArticles((prev) => [newArticle, ...prev]);
-    handleDeleteDraft(draft.id);
+  const handlePublishDraft = async (draft: BlogArticle) => {
+    try {
+      const { articleApi } = await import("../../api");
+      const { transformArticle } = await import("../../dataTransform");
+      const result = await articleApi.updateArticle(Number(draft.id), { is_draft: false });
+      if (result.success && result.data) {
+        setDrafts((prev) => prev.filter((d) => d.id !== draft.id));
+        const published = transformArticle(result.data);
+        setArticles((prev) => [published, ...prev]);
+      }
+    } catch (e) {
+      console.error("Failed to publish draft:", e);
+    }
   };
 
   // Filter articles published by this author only (by userId match or name match)
@@ -637,47 +666,65 @@ export default function ProfileView({
           <div className="flex-1 min-w-0">
             {isEditing ? (
               <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">{t.profile.nickname}</label>
-                    <input
-                      type="text"
-                      className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold w-full"
-                      value={newNickname}
-                      onChange={(e) => setNewNickname(e.target.value)}
-                      placeholder={t.profile.nickname}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">{t.profile.displayName}</label>
-                    <input
-                      type="text"
-                      className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold w-full"
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                    />
-                  </div>
-                </div>
                 <div>
-                  <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">ROLE</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[10px] font-mono text-slate-500 uppercase">{t.profile.nickname}</label>
+                    <span className={`text-[10px] font-mono ${newNickname.length > 20 ? 'text-red-400' : 'text-slate-600'}`}>{newNickname.length}/20</span>
+                  </div>
                   <input
                     type="text"
-                    className="rounded bg-slate-950 border border-slate-800 text-xs text-white px-3 py-1.5 font-mono w-full"
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value)}
+                    className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold w-full"
+                    value={newNickname}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/[<>{}[\]\\\/"'`;|&]/g, '');
+                      if (v.length <= 20) setNewNickname(v);
+                    }}
+                    placeholder={t.profile.nickname}
+                    maxLength={20}
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">BIO</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[10px] font-mono text-slate-500 uppercase">BIO</label>
+                    <span className={`text-[10px] font-mono ${newBio.length > 200 ? 'text-red-400' : 'text-slate-600'}`}>{newBio.length}/200</span>
+                  </div>
                   <textarea
                     className="rounded bg-slate-950 border border-slate-800 text-xs text-slate-300 w-full px-3 py-1.5"
                     rows={2}
                     value={newBio}
-                    onChange={(e) => setNewBio(e.target.value)}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 200) setNewBio(e.target.value);
+                    }}
+                    maxLength={200}
                   />
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">GITHUB</label>
+                    <input
+                      type="text"
+                      className="rounded bg-slate-950 border border-slate-800 text-xs text-white px-3 py-1.5 font-mono w-full"
+                      value={newGithubUrl}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 100) setNewGithubUrl(e.target.value);
+                      }}
+                      placeholder="https://github.com/username"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">EMAIL</label>
+                    <input
+                      type="email"
+                      className="rounded bg-slate-950 border border-slate-800 text-xs text-white px-3 py-1.5 font-mono w-full"
+                      value={newEmail}
+                      placeholder="user@example.com"
+                      disabled
+                    />
+                  </div>
+                </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-3">
                   <button
                     onClick={handleSaveProfile}
                     className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-white rounded px-3 py-1 text-xs font-semibold cursor-pointer"
@@ -688,9 +735,9 @@ export default function ProfileView({
                   <button
                     onClick={() => {
                       setNewNickname(profile.nickname || "");
-                      setNewName(profile.fullName || "");
-                      setNewRole(profile.role);
                       setNewBio(profile.bio);
+                      setNewGithubUrl(profile.githubUrl || "");
+                      setNewEmail(profile.email || "");
                       setIsEditing(false);
                     }}
                     className="text-slate-500 hover:text-slate-300 rounded px-3 py-1 text-xs"
@@ -758,7 +805,7 @@ export default function ProfileView({
               }`}
           >
             <Bookmark className="w-4 h-4" />
-            {t.profile.drafts.replace("{count}", String(simulatedDrafts.length))}
+            {t.profile.drafts.replace("{count}", String(drafts.length))}
           </button>
         </div>
 
@@ -839,12 +886,16 @@ export default function ProfileView({
         </div>
       ) : (
         <div className="space-y-4" id="drafts-stream">
-          {simulatedDrafts.length === 0 ? (
+          {!draftsLoaded ? (
+            <div className="text-center p-12">
+              <Loader2 className="w-5 h-5 text-slate-500 animate-spin mx-auto" />
+            </div>
+          ) : drafts.length === 0 ? (
             <div className="text-center rounded-xl border border-dashed border-slate-800 p-12 text-slate-600">
               <span className="text-xs font-mono">{t.profile.noDrafts}</span>
             </div>
           ) : (
-            simulatedDrafts.map((draft) => (
+            drafts.map((draft) => (
               <div
                 key={draft.id}
                 className="rounded-xl border border-slate-800 bg-slate-900/10 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4"

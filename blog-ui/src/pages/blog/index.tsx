@@ -188,6 +188,30 @@ export default function BlogView({
     }
   };
 
+  const handleSaveDraft = async () => {
+    if (!newTitle.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const { articleApi } = await import("../../api");
+      const result = await articleApi.createArticle({
+        title: newTitle,
+        abstract: newAbstract,
+        content: newContent,
+        category_id: getCategoryId(newCategory),
+        is_draft: true,
+        cover_image: newCoverImage || undefined,
+      });
+      if (result.success) {
+        showMessage(t.blog.draftSaved || "草稿已保存", "success");
+        navigate("/profile", { state: { tab: "drafts" } });
+      }
+    } catch (e) {
+      console.error("Failed to save draft:", e);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newContent.trim()) return;
@@ -615,13 +639,13 @@ export default function BlogView({
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
               <button
                 type="button"
-                onClick={() => navigate("/blog")}
-                className="rounded-lg px-4 py-2 text-xs font-medium text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 cursor-pointer"
+                onClick={handleSaveDraft}
+                disabled={isSubmitting || !newTitle.trim()}
+                className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-xs font-semibold text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 cursor-pointer ${isSubmitting || !newTitle.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {t.blog.draft}
               </button>
               <button
-                style={{ marginTop: "16px" }}
                 type="submit"
                 disabled={isSubmitting}
                 className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-xs font-semibold text-white transition-all cursor-pointer ${themeBtnColors[settings.themeAccent]} ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}

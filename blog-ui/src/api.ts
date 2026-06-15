@@ -146,6 +146,7 @@ export const articleApi = {
     category_id?: number;
     tag_id?: number;
     search?: string;
+    include_drafts?: boolean;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', String(params.page));
@@ -153,6 +154,7 @@ export const articleApi = {
     if (params?.category_id) searchParams.set('category_id', String(params.category_id));
     if (params?.tag_id) searchParams.set('tag_id', String(params.tag_id));
     if (params?.search) searchParams.set('search', params.search);
+    if (params?.include_drafts) searchParams.set('include_drafts', 'true');
 
     const query = searchParams.toString();
     return request<{

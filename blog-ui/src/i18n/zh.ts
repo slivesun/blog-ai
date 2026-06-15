@@ -104,6 +104,7 @@ export const translations = {
     composeSuccess: "发布成功",
     composeSuccessMsg: "正在跳转到文章页面...",
     draft: "保存草稿",
+    draftSaved: "草稿已保存",
     cancel: "取消",
     backToFeed: "返回列表",
     fields: {

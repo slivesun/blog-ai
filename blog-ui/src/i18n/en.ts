@@ -107,7 +107,8 @@ export const translations = {
     composeSubtitle: "Draft a technical or aesthetic publication to sync with the team. Once synchronized, it is added to your published tab.",
     composeSuccess: "SYSTEM INPUT SUCCESSFUL",
     composeSuccessMsg: "Synchronizing files and redirecting to feed...",
-    draft: "Delete Draft",
+    draft: "Save Draft",
+    draftSaved: "Draft saved",
     cancel: "Cancel Draft",
     backToFeed: "Back to feed",
     fields: {
