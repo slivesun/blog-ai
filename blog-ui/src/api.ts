@@ -472,15 +472,21 @@ async function computeFileHash(file: File): Promise<string> {
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
     return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
   }
-  // HTTP fallback: FNV-1a hash（非加密级，仅用于去重判断）
-  let h1 = 0x811c9dc5, h2 = 0x01000193;
+  // HTTP fallback: 多轮 FNV-1a 凑 64 字符 hex（非加密级，仅用于去重判断）
   const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.length; i++) {
-    h1 ^= bytes[i]; h1 = (h1 * 0x01000193) >>> 0;
-    h2 ^= bytes[i]; h2 = (h2 * 0x811c9dc5) >>> 0;
-  }
   const toHex = (n: number) => n.toString(16).padStart(8, "0");
-  return toHex(h1) + toHex(h2) + toHex(bytes.length) + toHex(bytes[0] || 0) + toHex(bytes[bytes.length - 1] || 0) + "0".repeat(8);
+  const parts: string[] = [];
+  for (let round = 0; round < 8; round++) {
+    let h = 0x811c9dc5 ^ round;
+    const start = Math.floor(bytes.length * round / 8);
+    const end = Math.floor(bytes.length * (round + 1) / 8);
+    for (let i = start; i < end; i++) {
+      h ^= bytes[i];
+      h = (h * 0x01000193) >>> 0;
+    }
+    parts.push(toHex(h));
+  }
+  return parts.join("");
 }
 
 // 文件上传 API

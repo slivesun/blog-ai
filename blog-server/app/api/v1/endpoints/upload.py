@@ -89,7 +89,7 @@ async def check_image_hash(
     """
     body = await request.json()
     file_hash = body.get("hash")
-    if not file_hash or len(file_hash) != 64:
+    if not file_hash or len(file_hash) < 32:
         raise HTTPException(status_code=400, detail="Invalid hash")
 
     existing = db.query(ImageModel).filter(ImageModel.hash == file_hash).first()
@@ -135,7 +135,7 @@ async def upload_image(
         )
 
     # 去重：优先用前端传的 hash，否则用内容 hash
-    file_hash = hash if hash and len(hash) == 64 else hashlib.sha256(content).hexdigest()
+    file_hash = hash if hash and len(hash) >= 32 else hashlib.sha256(content).hexdigest()
     existing = db.query(ImageModel).filter(ImageModel.hash == file_hash).first()
     if existing:
         return DataResponse(
