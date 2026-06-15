@@ -81,6 +81,17 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_PROFILE;
   });
 
+  // 监听 401 登出事件
+  useEffect(() => {
+    const handleLogout = () => {
+      setIsLoggedIn(false);
+      setProfile(INITIAL_PROFILE);
+      localStorage.removeItem("portalcore_profile");
+    };
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
+  }, []);
+
   const [articles, setArticles] = useState<BlogArticle[]>(INITIAL_ARTICLES);
   const [notes, setNotes] = useState<SystemNote[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);

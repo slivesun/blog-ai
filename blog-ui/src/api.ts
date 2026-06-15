@@ -57,6 +57,7 @@ async function request<T>(
 
     if (response.status === 401) {
       localStorage.removeItem('blog_access_token');
+      window.dispatchEvent(new Event('auth:logout'));
       if (window.location.pathname !== '/profile') {
         localStorage.setItem('login_redirect', window.location.pathname);
         window.location.href = '/profile';
@@ -529,6 +530,7 @@ export const uploadApi = {
 
     if (response.status === 401) {
       localStorage.removeItem('blog_access_token');
+      window.dispatchEvent(new Event('auth:logout'));
       if (window.location.pathname !== '/profile') {
         localStorage.setItem('login_redirect', window.location.pathname);
         window.location.href = '/profile';
