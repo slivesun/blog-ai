@@ -6,6 +6,7 @@
 import React, { useState } from "react";
 import { UserProfile, BlogArticle, ActivePath, SystemSettings } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
+import { useToast } from "../../context/ToastContext";
 import { Edit3, Check, Github, Mail, FileText, Bookmark, Trash2, Globe, Eye, EyeOff, BookOpen, LogOut, Loader2, AlertCircle, X } from "lucide-react";
 
 interface ProfileProps {
@@ -42,6 +43,7 @@ export default function ProfileView({
   onRegister,
 }: ProfileProps) {
   const { t } = useLanguage();
+  const { showMessage } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [newNickname, setNewNickname] = useState(profile.nickname || "");
   const [newName, setNewName] = useState(profile.name);
@@ -617,11 +619,11 @@ export default function ProfileView({
                       setProfile({ ...profile, avatarUrl: uploadResult.data.url });
                     }
                   } else {
-                    alert(uploadResult.message?.includes("too large") ? t.profile.uploadTooLarge : t.profile.uploadFailed);
+                    showMessage(uploadResult.message?.includes("too large") ? t.profile.uploadTooLarge : t.profile.uploadFailed, "error");
                   }
                 } catch (err) {
                   console.error("Avatar upload failed:", err);
-                  alert(t.profile.uploadFailed);
+                  showMessage(t.profile.uploadFailed, "error");
                 }
                 e.target.value = '';
               }}

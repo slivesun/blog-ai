@@ -442,8 +442,6 @@ export const uploadApi = {
       body: formData,
     });
 
-    const data = await response.json();
-
     if (response.status === 401) {
       localStorage.removeItem('blog_access_token');
       if (window.location.pathname !== '/profile') {
@@ -451,6 +449,17 @@ export const uploadApi = {
         window.location.href = '/profile';
       }
       return { success: false, message: 'Unauthorized' };
+    }
+
+    if (response.status === 413) {
+      return { success: false, message: 'File too large' };
+    }
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      return { success: false, message: `Upload failed (${response.status})` };
     }
 
     if (!response.ok) {

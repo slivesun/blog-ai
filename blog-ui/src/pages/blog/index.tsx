@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { BlogArticle, BlogComment, ActivePath, SystemSettings, UserProfile } from "../../types";
 import { Heart, MessageSquare, ArrowLeft, Send, Sparkles, Plus, CheckCircle, ChevronRight, Share2, Loader2 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
+import { useToast } from "../../context/ToastContext";
 import { articleApi } from "../../api";
 import { transformArticle } from "../../dataTransform";
 
@@ -40,6 +41,7 @@ export default function BlogView({
   onCreateComment,
 }: BlogViewProps) {
   const { t } = useLanguage();
+  const { showMessage } = useToast();
   const navigate = useNavigate();
   const { id: urlArticleId } = useParams<{ id: string }>();
   const [commentText, setCommentText] = useState("");
@@ -584,11 +586,11 @@ export default function BlogView({
                       if (result.success && result.data) {
                         setNewCoverImage(result.data.url);
                       } else {
-                        alert(result.message?.includes("too large") ? t.profile.uploadTooLarge : t.profile.uploadFailed);
+                        showMessage(result.message?.includes("too large") ? t.profile.uploadTooLarge : t.profile.uploadFailed, "error");
                       }
                     } catch (err) {
                       console.error("Cover upload failed:", err);
-                      alert(t.profile.uploadFailed);
+                      showMessage(t.profile.uploadFailed, "error");
                     } finally {
                       setIsUploadingCover(false);
                     }
