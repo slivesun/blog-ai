@@ -465,11 +465,22 @@ async function compressImage(file: File): Promise<File> {
   });
 }
 
-// 计算文件 SHA-256 hash
+// 计算文件 hash（HTTPS 用 SHA-256，HTTP 用纯 JS fallback）
 async function computeFileHash(file: File): Promise<string> {
   const buffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+  if (crypto.subtle?.digest) {
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+  // HTTP fallback: FNV-1a hash（非加密级，仅用于去重判断）
+  let h1 = 0x811c9dc5, h2 = 0x01000193;
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < bytes.length; i++) {
+    h1 ^= bytes[i]; h1 = (h1 * 0x01000193) >>> 0;
+    h2 ^= bytes[i]; h2 = (h2 * 0x811c9dc5) >>> 0;
+  }
+  const toHex = (n: number) => n.toString(16).padStart(8, "0");
+  return toHex(h1) + toHex(h2) + toHex(bytes.length) + toHex(bytes[0] || 0) + toHex(bytes[bytes.length - 1] || 0) + "0".repeat(8);
 }
 
 // 文件上传 API
