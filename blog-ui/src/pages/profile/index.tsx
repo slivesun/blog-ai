@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { UserProfile, BlogArticle, ActivePath, SystemSettings } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
@@ -46,6 +46,7 @@ export default function ProfileView({
   const { t } = useLanguage();
   const { showMessage } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [newNickname, setNewNickname] = useState(profile.nickname || "");
@@ -884,7 +885,8 @@ export default function ProfileView({
                   className="min-w-0 cursor-pointer text-left flex-1"
                   onClick={() => {
                     setSelectedArticleId(art.id);
-                    setPath("blog-detail");
+                    sessionStorage.setItem('detail_return_to', '/profile');
+                    navigate(`/blog/${art.id}`);
                   }}
                 >
                   <span className="text-[10px] font-mono text-slate-500">{art.date}</span>
@@ -900,7 +902,8 @@ export default function ProfileView({
                   <button
                     onClick={() => {
                       setSelectedArticleId(art.id);
-                      setPath("blog-detail");
+                      sessionStorage.setItem('detail_return_to', '/profile');
+                      navigate(`/blog/${art.id}`);
                     }}
                     className="p-1.5 text-slate-400 hover:text-white bg-slate-950 rounded-lg border border-slate-850 flex items-center gap-1 text-xs font-mono cursor-pointer"
                   >
