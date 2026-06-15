@@ -429,11 +429,46 @@ export const profileApi = {
   },
 };
 
+// 客户端图片压缩（Canvas）
+async function compressImage(file: File): Promise<File> {
+  // 2MB 以下不压缩
+  if (file.size <= 2 * 1024 * 1024) return file;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1920;
+      let { width, height } = img;
+      if (Math.max(width, height) > MAX) {
+        const ratio = MAX / Math.max(width, height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(new File([blob], file.name, { type: "image/jpeg" }));
+          else resolve(file);
+        },
+        "image/jpeg",
+        0.8
+      );
+    };
+    img.onerror = () => resolve(file);
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 // 文件上传 API
 export const uploadApi = {
   async uploadImage(file: File): Promise<ApiResponse<{ url: string }>> {
+    const compressed = await compressImage(file);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', compressed);
 
     const token = localStorage.getItem('blog_access_token');
     const response = await fetch(`${API_BASE_URL}/upload/image`, {
