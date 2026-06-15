@@ -32,10 +32,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg border animate-slide-right ${
+            className={`pointer-events-auto px-4 py-2.5 rounded-lg text-sm font-medium shadow-lg bg-white animate-slide-right ${
               toast.type === "error"
-                ? "bg-red-500/90 border-red-400/50 text-white"
-                : "bg-emerald-500/90 border-emerald-400/50 text-white"
+                ? "border border-red-400 text-red-500"
+                : "border border-emerald-400 text-emerald-500"
             }`}
           >
             {toast.message}
