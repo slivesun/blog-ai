@@ -204,8 +204,11 @@ export default function App() {
           if (response.success && response.data) {
             const transformed = transformSettings(response.data);
             // 保留本地 skin 值，不被后端默认值覆盖
-            setSettings((prev) => ({ ...transformed, skin: prev.skin }));
-            localStorage.setItem("portalcore_settings", JSON.stringify({ ...transformed, skin: settings.skin }));
+            setSettings((prev) => {
+              const merged = { ...transformed, skin: prev.skin };
+              localStorage.setItem("portalcore_settings", JSON.stringify(merged));
+              return merged;
+            });
           }
         } catch (e) {
           console.error("Failed to load settings:", e);
