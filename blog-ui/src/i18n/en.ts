@@ -42,6 +42,8 @@ export const translations = {
   // Home
   home: {
     prototypeConnections: "PROTOTYPE CONNECTIONS HIGHLIGHTED (NEON BORDERS ACTIVE)",
+    shareSite: "Share Site",
+    scanToVisit: "Scan to visit website",
     heroTitle: "Precision tools for the modern workflow.",
     heroSubtitle: "A highly focused, atmospheric environment designed to clarify your process, process cryptographic credentials, and elevate your daily digital operations.",
     cards: {

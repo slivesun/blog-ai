@@ -39,6 +39,8 @@ export const translations = {
   },
   home: {
     prototypeConnections: "原型连接已高亮",
+    shareSite: "分享站点",
+    scanToVisit: "扫码访问网站",
     heroTitle: "专为现代工作流打造。",
     heroSubtitle: "一个专注高效的工具平台，帮助您整理思路、管理技术文档、提升日常工作效率。",
     cards: {

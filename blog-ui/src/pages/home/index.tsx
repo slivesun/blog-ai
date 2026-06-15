@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ActivePath, SystemSettings } from "../../types";
-import { FileText, Terminal, LayoutGrid, ArrowRight, Share2, CornerRightDown, Laptop, Globe, ShieldAlert } from "lucide-react";
+import { FileText, Terminal, LayoutGrid, ArrowRight, Share2, CornerRightDown, Laptop, Globe, ShieldAlert, X } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
+import { QRCodeSVG } from "qrcode.react";
 
 interface HomeViewProps {
   setPath: (path: ActivePath) => void;
@@ -12,6 +13,8 @@ interface HomeViewProps {
 
 export default function HomeView({ setPath, settings, prototypeMode }: HomeViewProps) {
   const { t } = useLanguage();
+  const [showQR, setShowQR] = useState(false);
+  const siteUrl = window.location.origin;
 
   const routeMap: Record<string, string> = {
     "blog": "/blog",
@@ -150,7 +153,13 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
                   {t.home.journeyMap.subtitle}
                 </p>
               </div>
-              <Share2 className="w-5 h-5 text-indigo-400 hidden sm:block" />
+              <button
+                onClick={() => setShowQR(true)}
+                className="hidden sm:flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="font-mono">{t.home.shareSite}</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="blueprint-grid">
@@ -230,6 +239,25 @@ export default function HomeView({ setPath, settings, prototypeMode }: HomeViewP
         </div>
       </div>
 
+      {showQR && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowQR(false)}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl animate-fade-in w-1/2 max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-heading font-semibold text-white">{t.home.shareSite}</h3>
+              <button onClick={() => setShowQR(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex flex-col items-center gap-4">
+              <div className="bg-white p-4 rounded-xl">
+                <QRCodeSVG value={siteUrl} size={180} level="M" />
+              </div>
+              <p className="text-xs text-slate-400 font-mono">{t.home.scanToVisit}</p>
+              <p className="text-sm text-indigo-400 font-mono">{siteUrl}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
