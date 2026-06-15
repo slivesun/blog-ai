@@ -361,6 +361,7 @@ export default function ProfileView({
                   </div>
 
                   <button
+                    style={{ marginTop: "16px" }}
                     type="submit"
                     disabled={isLoggingIn}
                     className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]} ${isLoggingIn ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -517,6 +518,7 @@ export default function ProfileView({
                 )}
 
                 <button
+                  style={{ marginTop: "16px" }}
                   type="submit"
                   disabled={isLoggingIn}
                   className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]} ${isLoggingIn ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -728,8 +730,8 @@ export default function ProfileView({
           <button
             onClick={() => setActiveTab("published")}
             className={`flex items-center gap-2 pb-3 text-sm font-semibold tracking-wide border-b-2 transition-all cursor-pointer ${activeTab === "published"
-                ? `${themeTextColors[settings.themeAccent]}`
-                : "border-transparent text-slate-500 hover:text-slate-300"
+              ? `${themeTextColors[settings.themeAccent]}`
+              : "border-transparent text-slate-500 hover:text-slate-300"
               }`}
           >
             <BookOpen className="w-4 h-4" />
@@ -738,8 +740,8 @@ export default function ProfileView({
           <button
             onClick={() => setActiveTab("drafts")}
             className={`flex items-center gap-2 pb-3 text-sm font-semibold tracking-wide border-b-2 transition-all cursor-pointer ${activeTab === "drafts"
-                ? `${themeTextColors[settings.themeAccent]}`
-                : "border-transparent text-slate-500 hover:text-slate-300"
+              ? `${themeTextColors[settings.themeAccent]}`
+              : "border-transparent text-slate-500 hover:text-slate-300"
               }`}
           >
             <Bookmark className="w-4 h-4" />

@@ -43,7 +43,7 @@ export default function BlogView({
   const navigate = useNavigate();
   const { id: urlArticleId } = useParams<{ id: string }>();
   const [commentText, setCommentText] = useState("");
-  
+
   const [newTitle, setNewTitle] = useState("");
   const [newAbstract, setNewAbstract] = useState("");
   const [newCategory, setNewCategory] = useState("Engineering");
@@ -201,7 +201,7 @@ export default function BlogView({
           is_draft: false,
           cover_image: newCoverImage || undefined,
         });
-        
+
         if (result.success) {
           setSubmitSuccess(true);
           setTimeout(() => {
@@ -240,7 +240,7 @@ export default function BlogView({
 
         setArticles((prev) => [newArticle, ...prev]);
         setSubmitSuccess(true);
-        
+
         setTimeout(() => {
           setNewTitle("");
           setNewAbstract("");
@@ -289,7 +289,7 @@ export default function BlogView({
   if (currentPath === "blog-detail" && activeArticle) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 animate-fade-in" id="blog-detail-view">
-        
+
         <button
           onClick={() => {
             setSelectedArticleId(null);
@@ -336,7 +336,7 @@ export default function BlogView({
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight text-white mb-4 break-words">
             {activeArticle.title}
           </h1>
-          
+
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400 mt-4">
             <div className="flex items-center gap-2">
               <img
@@ -390,7 +390,7 @@ export default function BlogView({
               <span className="text-sm font-mono">{t.blog.detail.commentsCount.replace("{count}", activeArticle.comments.length.toString())}</span>
             </div>
           </div>
-          
+
           <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase">
             ID: {activeArticle.id}
           </span>
@@ -422,6 +422,7 @@ export default function BlogView({
                     {t.blog.detail.postAs.replace("{name}", profile.name)}
                   </span>
                   <button
+                    style={{ marginTop: "16px" }}
                     type="submit"
                     disabled={isSubmittingComment || !commentText.trim()}
                     className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg text-white transition-all cursor-pointer ${themeBtnColors[settings.themeAccent]} ${(isSubmittingComment || !commentText.trim()) ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -430,8 +431,8 @@ export default function BlogView({
                     {isSubmittingComment ? "..." : t.blog.detail.broadcast}
                   </button>
                 </div>
-            </div>
-          </form>
+              </div>
+            </form>
           ) : (
             <div className="mb-8">
               <button
@@ -485,7 +486,7 @@ export default function BlogView({
   if (currentPath === "blog-compose") {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 animate-fade-in" id="blog-compose-view">
-        
+
         <button
           onClick={() => navigate("/blog")}
           className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-slate-400 hover:text-white mb-8 cursor-pointer"
@@ -615,6 +616,7 @@ export default function BlogView({
                 {t.blog.draft}
               </button>
               <button
+                style={{ marginTop: "16px" }}
                 type="submit"
                 disabled={isSubmitting}
                 className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-xs font-semibold text-white transition-all cursor-pointer ${themeBtnColors[settings.themeAccent]} ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -642,7 +644,7 @@ export default function BlogView({
   return (
     <div className="py-12 sm:py-16 animate-fade-in" id="blog-feed-container">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 pb-6 border-b border-slate-800">
           <div>
             <h1 className="text-3xl font-heading font-extrabold tracking-tight text-white">
@@ -706,7 +708,7 @@ export default function BlogView({
 
               <div className="flex items-center justify-between border-t border-slate-850/60 pt-4 mt-6">
                 <span className="text-[11px] text-slate-400 font-medium">{art.author}</span>
-                
+
                 <div className="flex items-center gap-3 text-[10px] font-mono text-slate-500">
                   <span className="flex items-center gap-1">
                     <Heart className="w-3 h-3 text-red-500/70" />
