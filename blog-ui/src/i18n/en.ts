@@ -112,6 +112,7 @@ export const translations = {
       title: "Article Title",
       category: "Category Cluster",
       abstract: "Abstract Summary",
+      coverImage: "Cover Image",
       content: "Prose specifications (Content)",
       placeholder: {
         title: "e.g. Architecting Quantum Memory Arrays",

@@ -108,6 +108,7 @@ export const translations = {
       title: "文章标题",
       category: "分类",
       abstract: "摘要",
+      coverImage: "封面图片",
       content: "正文内容",
       placeholder: {
         title: "请输入文章标题",

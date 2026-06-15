@@ -316,6 +316,12 @@ if !errorlevel!==1 (
     echo   跳过数据库初始化
 )
 
+:: 确保上传目录存在
+if not exist "!BLOG_DIR!\blog-server\uploads\images" (
+    mkdir "!BLOG_DIR!\blog-server\uploads\images"
+    echo   上传目录已创建
+)
+
 :: ============================================
 :: 第六步：配置 Nginx
 :: ============================================

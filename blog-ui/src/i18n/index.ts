@@ -110,6 +110,7 @@ export type TranslationKeys = {
       title: string;
       category: string;
       abstract: string;
+      coverImage: string;
       content: string;
       placeholder: {
         title: string;

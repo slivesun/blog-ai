@@ -284,6 +284,7 @@ export default function ProfileView({
                   </div>
 
                   <button
+                    style={{ marginTop: "16px" }}
                     type="submit"
                     className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]}`}
                   >
@@ -582,17 +583,45 @@ export default function ProfileView({
   // --- LOGGED-IN VIEW ---
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 animate-fade-in" id="profile-panel-container">
-      
+
       {/* Profile Card Summary Banner */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/10 p-6 sm:p-8 mb-8 text-left relative">
         <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-          
-          <img
-            src={profile.avatarUrl}
-            alt={profile.name}
-            className="h-20 w-20 rounded-full object-cover border border-slate-800 bg-slate-950"
-            referrerPolicy="no-referrer"
-          />
+
+          <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-upload-input')?.click()}>
+            <img
+              src={profile.avatarUrl}
+              alt={profile.name}
+              className="h-20 w-20 rounded-full object-cover border border-slate-800 bg-slate-950"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Edit3 className="w-5 h-5 text-white" />
+            </div>
+            <input
+              id="avatar-upload-input"
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  const { uploadApi, profileApi } = await import("../../api");
+                  const uploadResult = await uploadApi.uploadImage(file);
+                  if (uploadResult.success && uploadResult.data) {
+                    const updateResult = await profileApi.updateProfile({ avatar_url: uploadResult.data.url });
+                    if (updateResult.success) {
+                      setProfile({ ...profile, avatarUrl: uploadResult.data.url });
+                    }
+                  }
+                } catch (err) {
+                  console.error("Avatar upload failed:", err);
+                }
+                e.target.value = '';
+              }}
+            />
+          </div>
 
           <div className="flex-1 min-w-0">
             {isEditing ? (
@@ -698,22 +727,20 @@ export default function ProfileView({
         <div className="flex gap-4">
           <button
             onClick={() => setActiveTab("published")}
-            className={`flex items-center gap-2 pb-3 text-sm font-semibold tracking-wide border-b-2 transition-all cursor-pointer ${
-              activeTab === "published"
+            className={`flex items-center gap-2 pb-3 text-sm font-semibold tracking-wide border-b-2 transition-all cursor-pointer ${activeTab === "published"
                 ? `${themeTextColors[settings.themeAccent]}`
                 : "border-transparent text-slate-500 hover:text-slate-300"
-            }`}
+              }`}
           >
             <BookOpen className="w-4 h-4" />
             {t.profile.published.replace("{count}", String(userPublishedArticles.length))}
           </button>
           <button
             onClick={() => setActiveTab("drafts")}
-            className={`flex items-center gap-2 pb-3 text-sm font-semibold tracking-wide border-b-2 transition-all cursor-pointer ${
-              activeTab === "drafts"
+            className={`flex items-center gap-2 pb-3 text-sm font-semibold tracking-wide border-b-2 transition-all cursor-pointer ${activeTab === "drafts"
                 ? `${themeTextColors[settings.themeAccent]}`
                 : "border-transparent text-slate-500 hover:text-slate-300"
-            }`}
+              }`}
           >
             <Bookmark className="w-4 h-4" />
             {t.profile.drafts.replace("{count}", String(simulatedDrafts.length))}

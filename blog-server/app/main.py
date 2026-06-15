@@ -3,8 +3,10 @@ FastAPI 应用主模块
 负责应用创建、配置和启动
 """
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.limiter import limiter
@@ -159,6 +161,11 @@ def create_app() -> FastAPI:
 
     # 注册API路由
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+    # 挂载上传文件静态目录
+    uploads_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "uploads")
+    os.makedirs(uploads_dir, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
     # 健康检查端点（含数据库连通性检测）
     @app.get("/health", tags=["健康检查"])

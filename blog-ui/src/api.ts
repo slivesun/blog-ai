@@ -429,6 +429,38 @@ export const profileApi = {
   },
 };
 
+// 文件上传 API
+export const uploadApi = {
+  async uploadImage(file: File): Promise<ApiResponse<{ url: string }>> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = localStorage.getItem('blog_access_token');
+    const response = await fetch(`${API_BASE_URL}/upload/image`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (response.status === 401) {
+      localStorage.removeItem('blog_access_token');
+      if (window.location.pathname !== '/profile') {
+        localStorage.setItem('login_redirect', window.location.pathname);
+        window.location.href = '/profile';
+      }
+      return { success: false, message: 'Unauthorized' };
+    }
+
+    if (!response.ok) {
+      return { success: false, message: data.detail || 'Upload failed' };
+    }
+
+    return { success: true, data: data.data, message: data.message };
+  },
+};
+
 // 导出所有 API
 export const api = {
   auth: authApi,
@@ -439,6 +471,7 @@ export const api = {
   notes: noteApi,
   notifications: notificationApi,
   profile: profileApi,
+  upload: uploadApi,
 };
 
 export default api;

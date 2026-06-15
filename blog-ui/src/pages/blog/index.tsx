@@ -48,6 +48,8 @@ export default function BlogView({
   const [newAbstract, setNewAbstract] = useState("");
   const [newCategory, setNewCategory] = useState("Engineering");
   const [newContent, setNewContent] = useState("");
+  const [newCoverImage, setNewCoverImage] = useState("");
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -197,6 +199,7 @@ export default function BlogView({
           content: newContent,
           category_id: getCategoryId(newCategory),
           is_draft: false,
+          cover_image: newCoverImage || undefined,
         });
         
         if (result.success) {
@@ -205,6 +208,7 @@ export default function BlogView({
             setNewTitle("");
             setNewAbstract("");
             setNewContent("");
+            setNewCoverImage("");
             setSubmitSuccess(false);
             navigate("/blog");
           }, 1500);
@@ -537,6 +541,55 @@ export default function BlogView({
                   placeholder={t.blog.fields.placeholder.abstract}
                   value={newAbstract}
                   onChange={(e) => setNewAbstract(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-mono text-slate-400 uppercase mb-2">{t.blog.fields.coverImage || "Cover Image"}</label>
+              <div className="flex items-center gap-3">
+                {newCoverImage && (
+                  <img src={newCoverImage} alt="cover" className="h-16 w-24 object-cover rounded-lg border border-slate-800" />
+                )}
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('cover-upload-input')?.click()}
+                  disabled={isUploadingCover}
+                  className="flex items-center gap-2 rounded-lg bg-slate-950 border border-slate-800 px-4 py-2.5 text-xs text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isUploadingCover ? "Uploading..." : (newCoverImage ? "Change" : "Upload")}
+                </button>
+                {newCoverImage && (
+                  <button
+                    type="button"
+                    onClick={() => setNewCoverImage("")}
+                    className="text-xs text-slate-500 hover:text-red-400 cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                )}
+                <input
+                  id="cover-upload-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setIsUploadingCover(true);
+                    try {
+                      const { uploadApi } = await import("../../api");
+                      const result = await uploadApi.uploadImage(file);
+                      if (result.success && result.data) {
+                        setNewCoverImage(result.data.url);
+                      }
+                    } catch (err) {
+                      console.error("Cover upload failed:", err);
+                    } finally {
+                      setIsUploadingCover(false);
+                    }
+                    e.target.value = '';
+                  }}
                 />
               </div>
             </div>

@@ -2,6 +2,8 @@
 
 ## 不要擅自链接服务器
 
+## 服务器是windows系统
+
 ## Project Structure
 
 - **Backend**: FastAPI + SQLAlchemy + SQLite, in `blog-server/`
