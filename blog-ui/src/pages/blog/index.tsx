@@ -688,21 +688,21 @@ export default function BlogView({
               className="group flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-900/15 p-5 hover:border-slate-700 hover:bg-slate-900/30 transition-all cursor-pointer"
             >
               <div>
-                <div className="relative h-44 w-full rounded-lg overflow-hidden mb-4 border border-slate-900">
+                <div className="h-44 w-full rounded-lg overflow-hidden mb-4 border border-slate-900">
                   <img
                     src={art.coverImage}
                     alt={art.title}
                     className="h-full w-full object-cover transition-transform group-hover:scale-102"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute top-3 left-3">
+                </div>
+                <div className="flex items-center gap-2 font-mono text-[9px] text-slate-500">{art.date}
+                  <div className="ml-6">
                     <span className={`rounded-md px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider ${categoryBadges[art.category] || "bg-slate-800 text-slate-300"}`}>
                       {art.category}
                     </span>
                   </div>
                 </div>
-
-                <span className="font-mono text-[9px] text-slate-500">{art.date}</span>
                 <h3 className="text-lg font-heading font-semibold text-white mt-1 group-hover:text-blue-200 transition-colors line-clamp-2 break-words">
                   {art.title}
                 </h3>

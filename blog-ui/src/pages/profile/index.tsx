@@ -46,7 +46,7 @@ export default function ProfileView({
   const { showMessage } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [newNickname, setNewNickname] = useState(profile.nickname || "");
-  const [newName, setNewName] = useState(profile.name);
+  const [newName, setNewName] = useState(profile.fullName || "");
   const [newRole, setNewRole] = useState(profile.role);
   const [newBio, setNewBio] = useState(profile.bio);
   const [isSaving, setIsSaving] = useState(false);
@@ -75,18 +75,21 @@ export default function ProfileView({
     setIsSaving(true);
     try {
       if (onUpdateProfile) {
-        const result = await onUpdateProfile({
+        const updateData: Record<string, any> = {
           nickname: newNickname || undefined,
-          full_name: newName,
+          full_name: newName || undefined,
           bio: newBio,
-          github_url: profile.githubUrl,
-        });
+        };
+        if (profile.githubUrl) updateData.github_url = profile.githubUrl;
+
+        const result = await onUpdateProfile(updateData);
 
         if (result.success) {
           setProfile({
             ...profile,
             nickname: newNickname || undefined,
-            name: newNickname || newName,
+            fullName: newName,
+            name: newNickname || newName || profile.username || "User",
             bio: newBio
           });
           setIsEditing(false);
@@ -95,7 +98,8 @@ export default function ProfileView({
         setProfile({
           ...profile,
           nickname: newNickname || undefined,
-          name: newNickname || newName,
+          fullName: newName,
+          name: newNickname || newName || profile.username || "User",
           role: newRole,
           bio: newBio
         });
@@ -654,20 +658,24 @@ export default function ProfileView({
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">ROLE</label>
                   <input
                     type="text"
-                    className="rounded bg-slate-950 border border-slate-800 text-xs text-white px-3 py-1.5 font-mono"
+                    className="rounded bg-slate-950 border border-slate-800 text-xs text-white px-3 py-1.5 font-mono w-full"
                     value={newRole}
                     onChange={(e) => setNewRole(e.target.value)}
                   />
                 </div>
-                <textarea
-                  className="rounded bg-slate-950 border border-slate-800 text-xs text-slate-300 w-full px-3 py-1.5"
-                  rows={2}
-                  value={newBio}
-                  onChange={(e) => setNewBio(e.target.value)}
-                />
+                <div>
+                  <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">BIO</label>
+                  <textarea
+                    className="rounded bg-slate-950 border border-slate-800 text-xs text-slate-300 w-full px-3 py-1.5"
+                    rows={2}
+                    value={newBio}
+                    onChange={(e) => setNewBio(e.target.value)}
+                  />
+                </div>
 
                 <div className="flex gap-2">
                   <button
@@ -680,7 +688,7 @@ export default function ProfileView({
                   <button
                     onClick={() => {
                       setNewNickname(profile.nickname || "");
-                      setNewName(profile.name);
+                      setNewName(profile.fullName || "");
                       setNewRole(profile.role);
                       setNewBio(profile.bio);
                       setIsEditing(false);

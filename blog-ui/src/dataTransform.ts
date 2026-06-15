@@ -77,6 +77,7 @@ export function transformProfile(apiProfile: any): UserProfile {
     id: apiProfile.id,
     username: apiProfile.username,
     nickname: apiProfile.nickname,
+    fullName: apiProfile.full_name,
     name: apiProfile.nickname || apiProfile.full_name || apiProfile.username || "User",
     role: apiProfile.role || "Contributor",
     bio: apiProfile.bio || "",

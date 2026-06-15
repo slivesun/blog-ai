@@ -52,6 +52,7 @@ export interface UserProfile {
   id?: number;
   username?: string;
   nickname?: string;
+  fullName?: string;
   name: string;
   role: string;
   bio: string;
