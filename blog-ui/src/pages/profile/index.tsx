@@ -47,6 +47,7 @@ export default function ProfileView({
   const { showMessage } = useToast();
   const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [newNickname, setNewNickname] = useState(profile.nickname || "");
   const [newBio, setNewBio] = useState(profile.bio);
   const [newGithubUrl, setNewGithubUrl] = useState(profile.githubUrl || "");
@@ -102,6 +103,28 @@ export default function ProfileView({
   }, [isLoggedIn, draftsLoaded]);
 
   const handleSaveProfile = async () => {
+    // 前端校验
+    if (newNickname.length > 20) {
+      showMessage("昵称不能超过20个字符", "error");
+      return;
+    }
+    if (/[<>{}[\]\\\/"'`;|&]/.test(newNickname)) {
+      showMessage("昵称包含非法字符", "error");
+      return;
+    }
+    if (newBio.length > 200) {
+      showMessage("BIO 不能超过200个字符", "error");
+      return;
+    }
+    if (newGithubUrl && newGithubUrl.length > 100) {
+      showMessage("GitHub 地址不能超过100个字符", "error");
+      return;
+    }
+    if (newGithubUrl && !/^https?:\/\/.+/.test(newGithubUrl) && newGithubUrl !== "") {
+      showMessage("GitHub 地址格式不正确，需以 http:// 或 https:// 开头", "error");
+      return;
+    }
+
     setIsSaving(true);
     try {
       if (onUpdateProfile) {
@@ -121,6 +144,9 @@ export default function ProfileView({
             githubUrl: newGithubUrl || undefined,
           });
           setIsEditing(false);
+          showMessage("保存成功", "success");
+        } else {
+          showMessage(result.error || "保存失败", "error");
         }
       } else {
         setProfile({
@@ -131,6 +157,7 @@ export default function ProfileView({
           githubUrl: newGithubUrl || undefined,
         });
         setIsEditing(false);
+        showMessage("保存成功", "success");
       }
     } finally {
       setIsSaving(false);
@@ -625,14 +652,19 @@ export default function ProfileView({
       <div className="rounded-2xl border border-slate-800 bg-slate-900/10 p-6 sm:p-8 mb-8 text-left relative">
         <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
 
-          <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-upload-input')?.click()}>
+          <div className="relative group cursor-pointer" onClick={() => !isUploadingAvatar && document.getElementById('avatar-upload-input')?.click()}>
             <img
               src={profile.avatarUrl}
               alt={profile.name}
               className="h-20 w-20 rounded-full object-cover border border-slate-800 bg-slate-950"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            {isUploadingAvatar && (
+              <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+              </div>
+            )}
+            <div className={`absolute inset-0 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${isUploadingAvatar ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`}>
               <Edit3 className="w-5 h-5 text-white" />
             </div>
             <input
@@ -643,6 +675,7 @@ export default function ProfileView({
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
+                setIsUploadingAvatar(true);
                 try {
                   const { uploadApi, profileApi } = await import("../../api");
                   const uploadResult = await uploadApi.uploadImage(file);
@@ -657,6 +690,8 @@ export default function ProfileView({
                 } catch (err) {
                   console.error("Avatar upload failed:", err);
                   showMessage(t.profile.uploadFailed, "error");
+                } finally {
+                  setIsUploadingAvatar(false);
                 }
                 e.target.value = '';
               }}

@@ -584,7 +584,9 @@ export default function BlogView({
                   disabled={isUploadingCover}
                   className="flex items-center gap-2 rounded-lg bg-slate-950 border border-slate-800 px-4 py-2.5 text-xs text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {isUploadingCover ? "Uploading..." : (newCoverImage ? "Change" : "Upload")}
+                  {isUploadingCover ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading...</>
+                  ) : (newCoverImage ? "Change" : "Upload")}
                 </button>
                 {newCoverImage && (
                   <button
