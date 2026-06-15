@@ -27,10 +27,14 @@ class RegisterRequest(BaseModel):
         username: 用户名
         email: 邮箱
         password: 密码
+        security_question: 安全问题 (pet/city/book/mother)
+        security_answer: 安全答案
     """
     username: str = Field(..., min_length=3, max_length=50, description="用户名")
     email: EmailStr = Field(..., description="邮箱")
     password: str = Field(..., min_length=6, max_length=100, description="密码")
+    security_question: Optional[str] = Field(None, description="安全问题")
+    security_answer: Optional[str] = Field(None, description="安全答案")
 
 
 class TokenResponse(BaseModel):
@@ -73,3 +77,11 @@ class PasswordResetConfirm(BaseModel):
     """密码重置确认"""
     token: str
     new_password: str = Field(..., min_length=6, max_length=100)
+
+
+class SecurityResetRequest(BaseModel):
+    """通过安全问题重置密码"""
+    username: str = Field(..., description="用户名")
+    security_question: str = Field(..., description="安全问题")
+    security_answer: str = Field(..., description="安全答案")
+    new_password: str = Field(..., min_length=6, max_length=100, description="新密码")

@@ -347,6 +347,25 @@ export type TranslationKeys = {
       bypass: string;
       note: string;
       registerSuccess: string;
+      forgotPassword: string;
+      forgotTitle: string;
+      forgotSubtitle: string;
+      securityQuestion: string;
+      securityAnswer: string;
+      newPassword: string;
+      confirmPassword: string;
+      resetBtn: string;
+      verifying: string;
+      resetSuccess: string;
+      questionRequired: string;
+      answerRequired: string;
+      passwordMismatch: string;
+      questions: {
+        pet: string;
+        city: string;
+        book: string;
+        mother: string;
+      };
     };
     title: string;
     published: string;
@@ -357,6 +376,8 @@ export type TranslationKeys = {
     noDrafts: string;
     edit: string;
     cancel: string;
+    nickname: string;
+    displayName: string;
     read: string;
     instantPublish: string;
     created: string;

@@ -103,11 +103,16 @@ export const authApi = {
   async register(
     username: string,
     email: string,
-    password: string
+    password: string,
+    securityQuestion?: string,
+    securityAnswer?: string
   ): Promise<ApiResponse<AuthResponse>> {
+    const body: Record<string, string> = { username, email, password };
+    if (securityQuestion) body.security_question = securityQuestion;
+    if (securityAnswer) body.security_answer = securityAnswer;
     const response = await request<AuthResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify(body),
     });
 
     if (response.success && response.data?.token.access_token) {
@@ -119,6 +124,13 @@ export const authApi = {
 
   async logout(): Promise<void> {
     localStorage.removeItem('blog_access_token');
+  },
+
+  async forgotPassword(username: string, securityQuestion: string, securityAnswer: string, newPassword: string) {
+    return request<any>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ username, security_question: securityQuestion, security_answer: securityAnswer, new_password: newPassword }),
+    });
   },
 
   async getCurrentUser() {

@@ -22,7 +22,7 @@ interface ProfileProps {
   onDeleteArticle?: (id: string) => Promise<any>;
   onLogin?: (username: string, password: string) => Promise<any>;
   onLogout?: () => Promise<void>;
-  onRegister?: (username: string, email: string, password: string) => Promise<any>;
+  onRegister?: (username: string, email: string, password: string, securityQuestion?: string, securityAnswer?: string) => Promise<any>;
 }
 
 export default function ProfileView({
@@ -54,7 +54,13 @@ export default function ProfileView({
 
   // Auth states
   const [showPassword, setShowPassword] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authMode, setAuthMode] = useState<"login" | "register" | "forgot">("login");
+  const [resetStep, setResetStep] = useState<"question" | "newPassword">("question");
+  const [resetUsername, setResetUsername] = useState("");
+  const [securityQuestion, setSecurityQuestion] = useState("");
+  const [securityAnswer, setSecurityAnswer] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
 
@@ -174,10 +180,10 @@ export default function ProfileView({
               {authMode === "login" ? t.profile.auth.title : t.profile.auth.title}
             </span>
             <h2 className="text-2xl font-bold font-heading text-white">
-              {authMode === "login" ? t.profile.auth.title : t.profile.auth.title}
+              {authMode === "forgot" ? t.profile.auth.forgotTitle : t.profile.auth.title}
             </h2>
             <p className="text-xs text-slate-400 font-sans mt-1.5 leading-relaxed">
-              {authMode === "login" ? t.profile.auth.subtitle : t.profile.auth.subtitle}
+              {authMode === "forgot" ? t.profile.auth.forgotSubtitle : t.profile.auth.subtitle}
             </p>
           </div>
 
@@ -216,133 +222,357 @@ export default function ProfileView({
             </div>
           )}
 
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            const username = formData.get('username') as string;
-            const password = formData.get('password') as string;
-            const email = formData.get('email') as string;
-
-            setAuthError(null);
-            setAuthSuccess(null);
-            setIsLoggingIn(true);
-
-            try {
-              if (authMode === "login") {
-                if (onLogin) {
-                  const result = await onLogin(username, password);
-                  if (result.success) {
-                    setPath("profile");
-                  } else {
-                    setAuthError(result.error || "Login failed");
-                  }
-                } else {
-                  setIsLoggedIn(true);
-                  setPath("profile");
-                }
-              } else {
-                // Register mode
-                if (onRegister) {
-                  const result = await onRegister(username, email || `${username}@example.com`, password);
-                  if (result.success) {
-                    setAuthSuccess(t.profile.auth.registerSuccess);
-                    setPath("profile");
-                  } else {
-                    setAuthError(result.error || "Registration failed");
-                  }
-                }
-              }
-            } catch (error: any) {
-              setAuthError(error?.message || "An unexpected error occurred");
-            } finally {
-              setIsLoggingIn(false);
-            }
-          }} className="space-y-4">
+          {authMode === "forgot" ? (
+            /* --- FORGOT PASSWORD FORM --- */
             <div>
-              <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.username}</label>
-              <input
-                name="username"
-                type="text"
-                required
-                className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
-                placeholder={t.profile.auth.username}
-              />
-            </div>
+              {resetStep === "question" ? (
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const username = formData.get('forgot_username') as string;
+                  const answer = formData.get('security_answer') as string;
 
-            {authMode === "register" && (
-              <div>
-                <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.email}</label>
-                <input
-                  name="email"
-                  type="email"
-                  className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
-                  placeholder={t.profile.auth.email}
-                />
-              </div>
-            )}
+                  if (!securityQuestion) {
+                    setAuthError(t.profile.auth.questionRequired);
+                    return;
+                  }
+                  if (!answer) {
+                    setAuthError(t.profile.auth.answerRequired);
+                    return;
+                  }
 
-            <div>
-              <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.password}</label>
-              <div className="relative">
-                <input
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 pr-10 text-white focus:outline-none focus:border-slate-700 font-mono tracking-widest"
-                  placeholder="••••••••••••"
-                />
+                  setAuthError(null);
+                  setResetUsername(username);
+                  setSecurityAnswer(answer);
+                  setResetStep("newPassword");
+                }} className="space-y-6">
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.username}</label>
+                    <input
+                      name="forgot_username"
+                      type="text"
+                      required
+                      className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
+                      placeholder={t.profile.auth.username}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.securityQuestion}</label>
+                    <select
+                      value={securityQuestion}
+                      onChange={(e) => setSecurityQuestion(e.target.value)}
+                      className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700 appearance-none cursor-pointer"
+                    >
+                      <option value="" className="bg-slate-950">-- {t.profile.auth.securityQuestion} --</option>
+                      <option value="pet" className="bg-slate-950">{t.profile.auth.questions.pet}</option>
+                      <option value="city" className="bg-slate-950">{t.profile.auth.questions.city}</option>
+                      <option value="book" className="bg-slate-950">{t.profile.auth.questions.book}</option>
+                      <option value="mother" className="bg-slate-950">{t.profile.auth.questions.mother}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.securityAnswer}</label>
+                    <input
+                      name="security_answer"
+                      type="text"
+                      required
+                      className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
+                      placeholder={t.profile.auth.securityAnswer}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]}`}
+                  >
+                    {t.profile.auth.resetBtn}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setAuthError(null);
+
+                  if (!newPassword) {
+                    setAuthError(t.profile.auth.newPassword);
+                    return;
+                  }
+                  if (newPassword !== confirmPassword) {
+                    setAuthError(t.profile.auth.passwordMismatch);
+                    return;
+                  }
+
+                  setIsLoggingIn(true);
+                  try {
+                    const { authApi } = await import("../../api");
+                    const result = await authApi.forgotPassword(resetUsername, securityQuestion, securityAnswer, newPassword);
+                    if (result.success) {
+                      setAuthSuccess(t.profile.auth.resetSuccess);
+                      setAuthMode("login");
+                      setResetStep("question");
+                      setResetUsername("");
+                      setSecurityQuestion("");
+                      setSecurityAnswer("");
+                      setNewPassword("");
+                      setConfirmPassword("");
+                    } else {
+                      setAuthError(result.message || "Reset failed");
+                    }
+                  } catch (error: any) {
+                    setAuthError(error?.message || "An unexpected error occurred");
+                  } finally {
+                    setIsLoggingIn(false);
+                  }
+                }} className="space-y-6">
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.newPassword}</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 pr-10 text-white focus:outline-none focus:border-slate-700 font-mono tracking-widest"
+                        placeholder="••••••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.confirmPassword}</label>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700 font-mono tracking-widest"
+                      placeholder="••••••••••••"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoggingIn}
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]} ${isLoggingIn ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {isLoggingIn ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {t.profile.auth.verifying}
+                      </>
+                    ) : (
+                      t.profile.auth.resetBtn
+                    )}
+                  </button>
+                </form>
+              )}
+
+              <div className="mt-6 pt-4 border-t border-slate-800 text-center">
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                  onClick={() => {
+                    setAuthMode("login");
+                    setResetStep("question");
+                    setResetUsername("");
+                    setSecurityQuestion("");
+                    setSecurityAnswer("");
+                    setNewPassword("");
+                    setConfirmPassword("");
+                    setAuthError(null);
+                    setAuthSuccess(null);
+                  }}
+                  className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {t.profile.auth.backToLogin}
                 </button>
               </div>
             </div>
+          ) : (
+            /* --- LOGIN / REGISTER FORM --- */
+            <>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const username = formData.get('username') as string;
+                const password = formData.get('password') as string;
+                const email = formData.get('email') as string;
+                const sq = formData.get('security_question') as string;
+                const sa = formData.get('security_answer') as string;
 
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]} ${isLoggingIn ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {isLoggingIn ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {authMode === "login" ? t.profile.auth.authenticating : t.profile.auth.creating}
-                </>
-              ) : (
-                authMode === "login" ? t.profile.auth.loginBtn : t.profile.auth.registerBtn
-              )}
-            </button>
-          </form>
+                setAuthError(null);
+                setAuthSuccess(null);
+                setIsLoggingIn(true);
 
-          {/* Toggle between login and register */}
-          <div className="mt-6 pt-4 border-t border-slate-800 text-center">
-            {authMode === "login" ? (
-              <button
-                onClick={() => {
-                  setAuthMode("register");
-                  setAuthError(null);
-                  setAuthSuccess(null);
-                }}
-                className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
-              >
-                {t.profile.auth.noAccount}
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setAuthMode("login");
-                  setAuthError(null);
-                  setAuthSuccess(null);
-                }}
-                className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
-              >
-                {t.profile.auth.backToLogin}
-              </button>
-            )}
-          </div>
+                try {
+                  if (authMode === "login") {
+                    if (onLogin) {
+                      const result = await onLogin(username, password);
+                      if (result.success) {
+                        setPath("profile");
+                      } else {
+                        setAuthError(result.error || "Login failed");
+                      }
+                    } else {
+                      setIsLoggedIn(true);
+                      setPath("profile");
+                    }
+                  } else {
+                    // Register mode
+                    if (onRegister) {
+                      const result = await onRegister(username, email || `${username}@example.com`, password, sq || undefined, sa || undefined);
+                      if (result.success) {
+                        setAuthSuccess(t.profile.auth.registerSuccess);
+                        setPath("profile");
+                      } else {
+                        setAuthError(result.error || "Registration failed");
+                      }
+                    }
+                  }
+                } catch (error: any) {
+                  setAuthError(error?.message || "An unexpected error occurred");
+                } finally {
+                  setIsLoggingIn(false);
+                }
+              }} className="space-y-6">
+                <div>
+                  <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.username}</label>
+                  <input
+                    name="username"
+                    type="text"
+                    required
+                    className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
+                    placeholder={t.profile.auth.username}
+                  />
+                </div>
+
+                {authMode === "register" && (
+                  <div>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.email}</label>
+                    <input
+                      name="email"
+                      type="email"
+                      className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
+                      placeholder={t.profile.auth.email}
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.password}</label>
+                  <div className="relative">
+                    <input
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 pr-10 text-white focus:outline-none focus:border-slate-700 font-mono tracking-widest"
+                      placeholder="••••••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {authMode === "register" && (
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.securityQuestion}</label>
+                      <select
+                        name="security_question"
+                        required
+                        className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700 appearance-none cursor-pointer"
+                      >
+                        <option value="" className="bg-slate-950">-- {t.profile.auth.securityQuestion} --</option>
+                        <option value="pet" className="bg-slate-950">{t.profile.auth.questions.pet}</option>
+                        <option value="city" className="bg-slate-950">{t.profile.auth.questions.city}</option>
+                        <option value="book" className="bg-slate-950">{t.profile.auth.questions.book}</option>
+                        <option value="mother" className="bg-slate-950">{t.profile.auth.questions.mother}</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1.5">{t.profile.auth.securityAnswer}</label>
+                      <input
+                        name="security_answer"
+                        type="text"
+                        required
+                        className="w-full text-xs rounded-xl bg-slate-950 border border-slate-850 px-4 py-3 text-white focus:outline-none focus:border-slate-700"
+                        placeholder={t.profile.auth.securityAnswer}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isLoggingIn}
+                  className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white transition-all cursor-pointer ${themeAccentColors[settings.themeAccent]} ${isLoggingIn ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isLoggingIn ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {authMode === "login" ? t.profile.auth.authenticating : t.profile.auth.creating}
+                    </>
+                  ) : (
+                    authMode === "login" ? t.profile.auth.loginBtn : t.profile.auth.registerBtn
+                  )}
+                </button>
+
+                {authMode === "login" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("forgot");
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className="text-xs text-slate-500 hover:text-indigo-400 transition-colors cursor-pointer text-center w-full mt-2"
+                  >
+                    {t.profile.auth.forgotPassword}
+                  </button>
+                )}
+              </form>
+
+              {/* Toggle between login and register */}
+              <div className="mt-6 pt-4 border-t border-slate-800 text-center">
+                {authMode === "login" ? (
+                  <button
+                    onClick={() => {
+                      setAuthMode("register");
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
+                  >
+                    {t.profile.auth.noAccount}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setAuthMode("login");
+                      setAuthError(null);
+                      setAuthSuccess(null);
+                    }}
+                    className="text-[11px] font-mono text-indigo-400 hover:underline cursor-pointer"
+                  >
+                    {t.profile.auth.backToLogin}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
 
         </div>
       </div>
@@ -369,17 +599,17 @@ export default function ProfileView({
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">{t.profile.auth.username}</label>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">{t.profile.nickname}</label>
                     <input
                       type="text"
                       className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold w-full"
                       value={newNickname}
                       onChange={(e) => setNewNickname(e.target.value)}
-                      placeholder="输入昵称"
+                      placeholder={t.profile.nickname}
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">{t.profile.auth.username}</label>
+                    <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">{t.profile.displayName}</label>
                     <input
                       type="text"
                       className="rounded bg-slate-950 border border-slate-800 text-sm text-white px-3 py-1.5 font-bold w-full"

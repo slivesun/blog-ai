@@ -416,8 +416,8 @@ export default function App() {
     navigate("/");
   };
 
-  const handleRegister = async (username: string, email: string, password: string) => {
-    const response = await authApi.register(username, email, password);
+  const handleRegister = async (username: string, email: string, password: string, securityQuestion?: string, securityAnswer?: string) => {
+    const response = await authApi.register(username, email, password, securityQuestion, securityAnswer);
     if (response.success && response.data) {
       setIsLoggedIn(true);
       const transformedProfile = transformProfile(response.data.user);

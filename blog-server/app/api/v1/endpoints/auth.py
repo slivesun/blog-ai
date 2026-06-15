@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User
 from app.models.settings import UserSettings
-from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, AuthResponse
+from app.schemas.auth import LoginRequest, RegisterRequest, SecurityResetRequest, TokenResponse, AuthResponse
 from app.schemas.user import UserResponse, UserSettingsResponse
 from app.schemas.common import DataResponse
 from app.core.security import (
@@ -72,7 +72,9 @@ async def register(
         full_name=register_data.username,
         role="user",
         is_active=True,
-        is_admin=False
+        is_admin=False,
+        security_question=register_data.security_question,
+        security_answer=get_password_hash(register_data.security_answer) if register_data.security_answer else None,
     )
     db.add(user)
     db.commit()
@@ -228,6 +230,61 @@ async def login_form(
     return DataResponse(
         data=AuthResponse(user=user_response, token=token_response)
     )
+
+
+@router.post("/reset-password", response_model=DataResponse)
+@limiter.limit("3/minute")
+async def reset_password(
+    request: Request,
+    reset_data: SecurityResetRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    通过安全问题重置密码
+
+    参数:
+        reset_data: 包含用户名、安全问题、安全答案和新密码
+        db: 数据库会话
+
+    返回:
+        DataResponse: 重置成功响应
+
+    异常:
+        HTTPException: 用户不存在、安全问题不匹配或答案错误
+    """
+    user = db.query(User).filter(User.username == reset_data.username).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User not found"
+        )
+
+    # 检查用户是否设置了安全问题
+    if not user.security_question or not user.security_answer:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Security question not set for this account"
+        )
+
+    # 验证安全问题是否匹配
+    if user.security_question != reset_data.security_question:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Security question does not match"
+        )
+
+    # 验证安全答案
+    if not verify_password(reset_data.security_answer, user.security_answer):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect security answer"
+        )
+
+    # 更新密码
+    user.hashed_password = get_password_hash(reset_data.new_password)
+    db.commit()
+
+    return DataResponse(message="Password reset successfully")
 
 
 @router.post("/logout", response_model=DataResponse)

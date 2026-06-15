@@ -212,6 +212,8 @@ def migrate_missing_columns(engine):
     # 以后新增字段只需在此追加一行
     expected_columns = [
         ("user_settings", "skin", "VARCHAR(10)", "'dark'"),
+        ("users", "security_question", "VARCHAR(50)", "NULL"),
+        ("users", "security_answer", "VARCHAR(255)", "NULL"),
     ]
 
     for table_name, col_name, col_type, default_val in expected_columns:

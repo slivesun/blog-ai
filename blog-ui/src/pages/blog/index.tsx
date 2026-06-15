@@ -85,6 +85,8 @@ export default function BlogView({
         // 多次尝试恢复，防止图片加载导致高度变化
         restore();
         const timer = setTimeout(restore, 300);
+        // 恢复后清除，下次进入详情再重新记录
+        sessionStorage.removeItem('blog_scroll_y');
         return () => clearTimeout(timer);
       }
     }
@@ -287,7 +289,9 @@ export default function BlogView({
         <button
           onClick={() => {
             setSelectedArticleId(null);
-            navigate("/blog");
+            const returnTo = sessionStorage.getItem('detail_return_to');
+            sessionStorage.removeItem('detail_return_to');
+            navigate(returnTo || "/blog");
           }}
           className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-slate-400 hover:text-white mb-8 cursor-pointer"
         >
@@ -295,19 +299,18 @@ export default function BlogView({
           {t.blog.backToFeed}
         </button>
 
-        {/* 悬浮返回按钮 - 右侧固定 */}
+        {/* 悬浮返回按钮 - 右下角圆形 */}
         <button
           onClick={() => {
             setSelectedArticleId(null);
-            navigate("/blog");
+            const returnTo = sessionStorage.getItem('detail_return_to');
+            sessionStorage.removeItem('detail_return_to');
+            navigate(returnTo || "/blog");
           }}
-          className="fixed right-6 top-1/2 -translate-y-1/2 z-50 group flex items-center gap-2 bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white rounded-full p-3 hover:pr-5 shadow-lg shadow-black/30 transition-all duration-300 cursor-pointer"
+          className="fixed bottom-8 right-8 z-50 w-12 h-12 flex items-center justify-center bg-slate-800/90 hover:bg-slate-700 backdrop-blur-sm border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white rounded-full shadow-lg shadow-black/30 transition-all duration-300 cursor-pointer hover:scale-110"
           title={t.blog.backToFeed}
         >
-          <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-xs font-mono whitespace-nowrap overflow-hidden max-w-0 group-hover:max-w-[80px] transition-all duration-300">
-            {t.blog.backToFeed}
-          </span>
+          <ArrowLeft className="w-5 h-5" />
         </button>
 
         <div className="relative h-64 sm:h-96 w-full rounded-2xl overflow-hidden mb-8 border border-slate-800">

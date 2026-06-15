@@ -144,6 +144,7 @@
 .w-16 { width: 16px; }
 .w-64 { width: 16rem; }
 .w-80 { width: 20rem; }
+.w-\[300px\] { width: 300px; }
 .max-w-2xl { max-width: 42rem; }
 .max-w-3xl { max-width: 48rem; }
 .max-w-4xl { max-width: 56rem; }
@@ -1109,6 +1110,12 @@
   &::-webkit-scrollbar-track { background: transparent; }
   &::-webkit-scrollbar-thumb { background: rgba(100, 100, 130, 0.3); border-radius: 2px; }
   &::-webkit-scrollbar-thumb:hover { background: rgba(100, 100, 130, 0.5); }
+}
+
+// === Scrollbar none (隐藏滚动条但保留滚动功能) ===
+.scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
 }
 
 // === Scroll snap ===

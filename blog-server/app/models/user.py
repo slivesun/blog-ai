@@ -30,6 +30,8 @@ class User(Base):
     created_at = Column(DateTime, default=utcnow, comment="创建时间")
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, comment="更新时间")
     last_login = Column(DateTime, nullable=True, comment="最后登录时间")
+    security_question = Column(String(50), nullable=True, comment="安全问题: pet/city/book/mother")
+    security_answer = Column(String(255), nullable=True, comment="安全答案(哈希存储)")
 
     # 关联关系
     articles = relationship("Article", back_populates="author", cascade="all, delete-orphan")

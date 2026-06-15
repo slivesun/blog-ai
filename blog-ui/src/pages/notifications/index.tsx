@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppNotification, ActivePath, SystemSettings } from "../../types";
 import { useLanguage } from "../../context/LanguageContext";
 import { Bell, ShieldAlert, CheckCircle, MessageSquare, Trash2, ArrowRight, Loader2 } from "lucide-react";
@@ -30,6 +31,7 @@ export default function NotificationsView({
   onDeleteNotification,
 }: NotificationsProps) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClearAll = () => {
@@ -71,7 +73,9 @@ export default function NotificationsView({
 
     if (notif.linkToId) {
       setSelectedArticleId(notif.linkToId);
-      setPath("blog-detail");
+      // 记录来源是通知页，以便返回时回到通知列表
+      sessionStorage.setItem('detail_return_to', '/notifications');
+      navigate(`/blog/${notif.linkToId}`);
     }
   };
 

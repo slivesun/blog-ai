@@ -248,98 +248,95 @@ export default function NotesView({
         </button>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8" id="notes-stage-grids">
-        
-        <div className="w-full lg:w-80 shrink-0 space-y-4">
-          
-          <div className="relative">
-            <Search className="absolute top-3 left-3 w-4 h-4 text-slate-500 pointer-events-none" />
-            <input
-              type="text"
-              placeholder={t.notes.search}
-              className="w-full text-xs rounded-xl bg-slate-900 border border-slate-800 pl-9 pr-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-slate-700 font-sans"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+      <div className="flex flex-col gap-6" id="notes-stage-grids">
 
-          <div>
-            <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block mb-2 pl-2">{t.notes.filter}</span>
-            <div className="flex flex-wrap lg:flex-col gap-1.5">
-              {categories.map((cat) => {
-                const isSelected = selectedCategory === cat;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium text-left transition-colors cursor-pointer ${
-                      isSelected
-                        ? "bg-slate-800 text-white border border-slate-750"
-                        : "text-slate-400 hover:bg-slate-900/40 hover:text-white"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-2 max-h-[350px] lg:max-h-[500px] overflow-y-auto" id="notes-sidebar-items">
-            <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase block mb-1 pl-2">{t.notes.items}</span>
-            {filteredNotes.length === 0 ? (
-              <div className="text-center rounded-xl border border-dashed border-slate-850 p-6 text-slate-600">
-                <span className="text-xs font-mono">{t.notes.noDocuments}</span>
-              </div>
-            ) : (
-              filteredNotes.map((note) => {
-                const isActive = note.id === activeNoteId;
-                return (
-                  <div
-                    key={note.id}
-                    onClick={() => setActiveNoteId(note.id)}
-                    className={`group relative rounded-xl border p-4 cursor-pointer text-left transition-all ${
-                      isActive
-                        ? "bg-slate-900/60 border-slate-750 shadow-md"
-                        : "bg-slate-900/10 border-slate-850 hover:bg-slate-900/30 hover:border-slate-750"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-1.5 gap-2">
-                      <span className="text-[10px] font-mono text-slate-500">{note.category}</span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteNote(note.id);
-                        }}
-                        className="text-slate-600 hover:text-red-400 hover:scale-105 transition-all opacity-0 group-hover:opacity-100 shrink-0"
-                        title="Delete Document"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <h3 className="text-xs font-semibold text-white tracking-tight leading-tight group-hover:text-white mb-2 line-clamp-2">
-                      {note.title}
-                    </h3>
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-900/40">
-                      <span className="text-[9px] font-mono text-slate-600">{note.date}</span>
-                      <div className="flex gap-1">
-                        {Array.isArray(note.tags) && note.tags.slice(0, 2).map((tag) => (
-                          <span key={tag} className="rounded bg-slate-950 px-1 py-0.5 text-[8px] font-mono text-slate-500">
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+        {/* Row 1: 搜索 */}
+        <div className="relative max-w-md">
+          <Search className="absolute top-1/2 left-3 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+          <input
+            type="text"
+            placeholder={t.notes.search}
+            className="w-full text-xs rounded-lg bg-slate-900 border border-slate-800 pl-9 pr-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-slate-700 font-sans"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
-        <div className="flex-1 rounded-2xl border border-slate-800 bg-slate-900/10 p-5 sm:p-7 min-w-0 flex flex-col justify-between" id="notes-editor-panel">
+        {/* Row 2: 分类筛选 - 横向滚动 */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none" id="notes-category-bar">
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                  isSelected
+                    ? "bg-slate-800 text-white border border-slate-700"
+                    : "text-slate-400 hover:bg-slate-900/60 hover:text-white border border-transparent"
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Row 3: 笔记卡片列表 - 横向滚动 */}
+        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none" id="notes-card-list">
+          {filteredNotes.length === 0 ? (
+            <div className="text-center rounded-xl border border-dashed border-slate-850 p-6 text-slate-600 w-full">
+              <span className="text-xs font-mono">{t.notes.noDocuments}</span>
+            </div>
+          ) : (
+            filteredNotes.map((note) => {
+              const isActive = note.id === activeNoteId;
+              return (
+                <div
+                  key={note.id}
+                  onClick={() => setActiveNoteId(note.id)}
+                  className={`group relative shrink-0 w-[300px] rounded-xl border p-4 cursor-pointer text-left transition-all ${
+                    isActive
+                      ? "bg-slate-900/60 border-slate-700 shadow-md shadow-black/20"
+                      : "bg-slate-900/10 border-slate-850 hover:bg-slate-900/30 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-2 gap-2">
+                    <span className="text-[10px] font-mono text-slate-500">{note.category}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteNote(note.id);
+                      }}
+                      className="text-slate-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100 shrink-0"
+                      title="Delete Document"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <h3 className="text-xs font-semibold text-white tracking-tight leading-tight group-hover:text-white mb-2 line-clamp-2 min-h-[2rem]">
+                    {note.title}
+                  </h3>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 mt-auto pt-2 border-t border-slate-900/40">
+                    <span className="text-[9px] font-mono text-slate-600">{note.date}</span>
+                    <div className="flex gap-1">
+                      {Array.isArray(note.tags) && note.tags.slice(0, 2).map((tag) => (
+                        <span key={tag} className="rounded bg-slate-950 px-1 py-0.5 text-[8px] font-mono text-slate-500">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Row 4: 编辑区域 */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/10 p-5 sm:p-7 min-w-0 flex flex-col justify-between" id="notes-editor-panel">
           {activeNote ? (
             <div className="space-y-6">
               
