@@ -147,10 +147,17 @@ blog-server/
 
 ### 用户资料接口
 - `GET /api/v1/profile` - 获取个人资料
-- `PUT /api/v1/profile` - 更新个人资料 (支持 nickname 字段)
+- `PUT /api/v1/profile` - 更新个人资料 (支持 nickname、github_url、email 字段)
 - `GET /api/v1/settings` - 获取用户设置
-- `PUT /api/v1/settings` - 更新用户设置
+- `PUT /api/v1/settings` - 更新用户设置 (支持 theme_accent、theme_accent_custom、skin)
 - `PUT /api/v1/profile/password` - 修改密码
+
+### 文件上传接口
+- `POST /api/v1/upload/image` - 上传图片 (支持 hash 参数去重)
+- `POST /api/v1/upload/check` - 检查图片哈希是否已存在
+
+### 健康检查
+- `GET /health` - 返回数据库连接状态和版本信息
 
 ## 核心功能说明
 
@@ -169,6 +176,28 @@ blog-server/
 - 支持嵌套回复 (parent_id)
 - 软删除 (is_deleted 标记)
 - 返回时自动构建评论树 (递归)
+
+### 安全特性
+
+#### 限流 (slowapi)
+- 全局默认：100 请求/分钟/IP
+- 登录：5次/分钟
+- 注册：3次/分钟
+- 发文：10次/分钟
+- 点赞：30次/分钟
+- 评论：10次/分钟
+
+#### 防刷机制
+- 点赞去重：内存 IP+文章 24小时窗口
+- 浏览去重：Cookie `viewed_{article_id}` 24小时
+
+#### 输入净化
+- 搜索：SQL LIKE 通配符转义（`%`、`_`、`\`）
+- 通知内容：`html.escape()` 转义
+
+#### 图片去重
+- 基于文件哈希（SHA-256）的去重机制
+- 相同文件只存储一次，返回已有 URL
 
 ## 环境配置
 

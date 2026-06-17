@@ -1,11 +1,13 @@
-# Blog 阿里云部署指南
+# Blog 部署指南
 
-## 你的环境
+## 当前生产环境
 
-- 服务器：阿里云 2核2G
-- 数据库：SQLite
-- 域名：已备案
-- HTTPS：暂不需要
+- 服务器：阿里云 Windows 11，2核2G
+- 数据库：SQLite（WAL模式）
+- 域名：whzzzhy.xyz（IP: 120.26.209.105）
+- Web服务器：nginx 1.30.2
+- Python：3.13
+- HTTPS：暂未配置
 
 ---
 

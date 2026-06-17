@@ -1,16 +1,27 @@
 # Blog 项目部署文档
 
+> 最后更新：2026-06-15
+
 ## 项目概述
 
 本文档描述如何部署 blog-ui 前端和 blog-server 后端项目。
 
+## 当前生产环境
+
+- 服务器：阿里云 Windows 11，2核2G
+- 域名：whzzzhy.xyz（IP: 120.26.209.105）
+- Web服务器：nginx 1.30.2
+- Python：3.13
+- 数据库：SQLite（WAL模式）
+
 ## 环境要求
 
-### 基础环境
+### 生产环境（Windows）
+- Windows 11
 - Node.js 18+
-- Python 3.8+
-- PostgreSQL 14+ (生产环境)
-- Redis (可选，用于缓存)
+- Python 3.13+
+- nginx 1.30.2
+- Git
 
 ### 开发环境
 - Node.js 18+

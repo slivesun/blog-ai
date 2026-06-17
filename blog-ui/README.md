@@ -57,7 +57,8 @@ blog-ui/
 │   ├── utils.ts             # 工具函数 (MD5, SHA256, 初始数据)
 │   ├── dataTransform.ts     # API 数据 → 前端类型转换
 │   ├── context/
-│   │   └── LanguageContext.tsx  # 中英文语言上下文
+│   │   ├── LanguageContext.tsx  # 中英文语言上下文
+│   │   └── ToastContext.tsx    # Toast 通知上下文
 │   ├── components/
 │   │   ├── Header.tsx       # 顶部导航栏
 │   │   └── Footer.tsx       # 底部栏
@@ -130,6 +131,32 @@ Backend API → api.ts (fetch + JWT) → dataTransform.ts (类型转换) → Rea
 - `useLanguage()` hook 获取当前语言和翻译函数
 - Header 中有语言切换按钮
 - 所有界面文本通过 `t.xxx.yyy` 访问
+
+### Toast 通知系统
+
+通过 `ToastContext` 实现轻量级通知:
+
+- `useToast()` hook 获取 `showMessage(text, type)` 方法
+- 支持 success / error / info 三种类型
+- 固定定位，最高层级（zIndex 2147483647）
+- 替代原生 `alert()` 调用
+
+### 图片上传
+
+`api.ts` 中封装了完整的图片上传流程:
+
+- 客户端压缩：Canvas API，>2MB 文件自动压缩至 1920px / JPEG 80%
+- 文件哈希去重：SHA-256（HTTPS）/ FNV-1a（HTTP 降级）
+- 上传前预检：`/upload/check` 端点检查是否已存在
+- 错误处理：413、网络错误等友好提示
+
+### 自定义主题色
+
+支持 5 种主题色方案:
+
+- 4 种预设色：cyan、violet、amber、emerald（CSS 类）
+- 自定义色：`<input type="color">` 选择器 + HEX 值存储
+- 实现方式：预设色用 CSS 类，自定义色用 inline style 覆盖
 
 ### 状态管理
 

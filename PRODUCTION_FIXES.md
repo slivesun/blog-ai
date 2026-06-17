@@ -131,13 +131,35 @@ DATABASE_URL=postgresql://user:password@postgres:5432/blog
    - [ ] Set up database backups
    - [ ] Configure volume backups for uploads
 
-## Remaining Production Work
+## 2026-06-15 新增修复
 
-- Replace SQLite with PostgreSQL for durable multi-user production use.
-- Add Alembic migration scripts and stop relying on automatic `Base.metadata.create_all()` for schema management.
-- Add CI checks for backend tests, frontend type-checking, and frontend build.
-- Decide whether article and note creation should be admin-only or open to all registered users.
-- Rotate or remove any existing `admin / admin123` account from old local or deployed databases.
-- Review public registration policy before opening the site to the internet.
-- Set up proper logging and monitoring solution.
-- Configure automated backups.
+### 图片上传
+- nginx `client_max_body_size 10m` 配置
+- 客户端压缩（Canvas API，>2MB 文件自动压缩）
+- 文件哈希去重（SHA-256 / FNV-1a 降级）
+- 413 错误处理和友好提示
+
+### 认证流程
+- 401 响应自动登出并跳转登录页
+- `auth:logout` 事件广播清除全局状态
+- `login_redirect` 支持返回原页面
+
+### 主题系统
+- 自定义主题色支持（HEX 色值）
+- 数据库迁移：`theme_accent_custom` 列
+- 全页面内联样式适配自定义色
+
+### 输入验证
+- 个人中心表单校验（字数、特殊字符）
+- Toast 通知替代 alert()
+- 删除二次确认弹框
+
+## 剩余待办
+
+- 替换 SQLite 为 PostgreSQL（高并发场景）
+- 引入 Alembic 迁移脚本替代 `create_all`
+- 添加 CI 检查（后端测试、前端类型检查、构建）
+- 确定文章/笔记创建权限策略
+- 配置 HTTPS 证书
+- 设置自动化备份调度
+- 配置日志聚合和监控告警

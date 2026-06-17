@@ -97,6 +97,15 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' '
 
 Standalone config at `nginx-windows.conf` with full `http {}` block. Includes gzip, SPA fallback (`try_files $uri /index.html`), API proxy to `127.0.0.1:8000`, static file caching (1y for assets).
 
+### 自动化部署方案
+
+详见 [DEPLOYMENT.md](./DEPLOYMENT.md)，包含 5 种部署方案：
+- Windows 批处理脚本（当前方案）
+- GitHub Actions CI/CD
+- Docker Compose
+- 宝塔面板
+- Linux Shell 脚本
+
 ## Database Backup
 
 Script: `blog-server/backup_db.py`
@@ -115,6 +124,51 @@ python backup_db.py [backup_dir]   # default: ./backups/, keeps last 30 copies
 
 Custom `LanguageContext` with `useLanguage` hook. Keys in `src/i18n/zh.ts` and `en.ts`. All pages (notifications, profile, settings) use `t.*` references.
 
+## 2026-06-15 新增功能
+
+### 自定义主题色系统
+- 4种预设色：cyan、violet、amber、emerald（CSS类）
+- 自定义色板：原生 `<input type="color">` 选择器
+- CSS变量 + 内联样式覆盖模式支持自定义HEX色
+- 全页面适配：首页、博客、笔记、通知、个人中心、设置
+
+### 图片上传优化
+- 客户端压缩：Canvas API，最大1920px，JPEG质量80，文件 >2MB 触发
+- 文件哈希去重：SHA-256（HTTPS）/ FNV-1a 降级（HTTP）
+- 服务端预检：`/upload/check` 端点
+- 上传加载状态和错误提示
+
+### Toast 通知系统
+- 轻量 React Context：`ToastContext` + `useToast()` Hook
+- 固定定位，zIndex 2147483647
+- 成功（绿色边框）/ 失败（红色边框）/ 信息（蓝色边框）
+- 替代所有 `alert()` 调用
+
+### 草稿系统
+- 真实API支持的草稿（非模拟数据）
+- 创建、更新、删除、发布操作
+- 个人中心草稿编辑入口
+- 保存后跳转草稿箱标签页
+
+### 个人中心改进
+- 移除显示名称/角色字段（无实际用途）
+- 新增 GitHub/邮箱编辑
+- 表单校验 + Toast 反馈
+- 删除二次确认弹框
+- 文章详情页支持返回来源页
+
+### 安全增强
+- 限流（slowapi）：登录5次/分，注册3次/分，发文10次/分
+- 防刷：点赞去重（24h IP+文章），浏览去重（Cookie 24h）
+- 输入净化：SQL LIKE转义，通知内容HTML转义
+- nginx `client_max_body_size 10m` 支持图片上传
+- 401 响应自动登出并跳转登录页
+
+### 国际化
+- 自定义 `LanguageContext` + `useLanguage` Hook
+- 中英文键值在 `src/i18n/zh.ts` 和 `en.ts`
+- 全页面使用 `t.*` 引用
+
 ## Known Limitations
 
 - No HTTPS (no certificate yet).
@@ -122,3 +176,4 @@ Custom `LanguageContext` with `useLanguage` hook. Keys in `src/i18n/zh.ts` and `
 - SQLite for production (fine for low traffic, consider PostgreSQL for scale).
 - In-memory like dedup resets on server restart (acceptable for current scale).
 - No automated backup scheduling (manual `backup_db.py` or Windows Task Scheduler).
+- Custom theme hover states use fallback colors (CSS can't do dynamic hover with inline styles).

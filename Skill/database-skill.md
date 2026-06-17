@@ -215,13 +215,28 @@ class UserSettings(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
     allow_notifications = Column(Boolean, default=True)
     allow_comments = Column(Boolean, default=True)
-    theme_accent = Column(String(20), default="cyan")
+    theme_accent = Column(String(20), default="cyan")  # cyan/violet/amber/emerald/custom
+    theme_accent_custom = Column(String(9), nullable=True)  # 自定义主题色 HEX，如 #3b82f6
     high_density_layout = Column(Boolean, default=False)
+    skin = Column(String(10), default="dark")  # dark/light
     language = Column(String(10), default="zh")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", back_populates="user_settings")
+```
+
+### 9. Image 模型（图片去重）
+
+```python
+class Image(Base):
+    __tablename__ = "images"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    hash = Column(String(64), unique=True, nullable=False, index=True)
+    url = Column(String(500), nullable=False)
+    filename = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 ```
 
 ## 数据库初始化
@@ -249,6 +264,28 @@ def init_default_categories(db):
         category = Category(**cat_data)
         db.add(category)
     db.commit()
+```
+
+### 数据库迁移
+
+项目使用 SQLite + SQLAlchemy 的 `create_all` 自动创建表结构。对于新增列，`init_db.py` 中包含迁移逻辑：
+
+```python
+# 迁移列表：(表名, 列名, 列类型, 默认值)
+MIGRATIONS = [
+    ("user_settings", "theme_accent_custom", "VARCHAR(9)", "NULL"),
+    # 新增迁移在此添加
+]
+```
+
+运行迁移：
+```bash
+# Windows
+venv\Scripts\python.exe scripts\init_db.py
+
+# Linux
+source venv/bin/activate
+python scripts/init_db.py
 ```
 
 ## 索引设计
