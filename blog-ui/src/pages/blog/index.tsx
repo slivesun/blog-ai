@@ -79,8 +79,10 @@ export default function BlogView({
     }
   }, [editDraftId, currentPath]);
 
-  const [visibleCount, setVisibleCount] = useState(9);
+  const [visibleCount, setVisibleCount] = useState(10);
   const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [detailLoaded, setDetailLoaded] = useState(false);
   const [loginToast, setLoginToast] = useState<string | null>(null);
 
@@ -102,6 +104,12 @@ export default function BlogView({
   // 返回列表页后恢复滚动位置
   useEffect(() => {
     if (currentPath === "blog") {
+      // 进入博客列表页时重置分页状态
+      setVisibleCount(10);
+      setHasMore(true);
+      setCurrentPage(1);
+      setIsLoadingMore(false);
+
       const savedY = sessionStorage.getItem('blog_scroll_y');
       if (savedY) {
         // 延迟恢复，等 lazy 组件和图片加载完成
@@ -317,10 +325,32 @@ export default function BlogView({
     }
   };
 
-  const handleLoadMore = () => {
-    setVisibleCount((c) => c + 6);
-    if (visibleCount >= articles.length) {
+  const handleLoadMore = async () => {
+    if (isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const response = await articleApi.getArticles({ page: nextPage, page_size: 10 });
+      if (response.success && response.data) {
+        const transformed = response.data.articles.map(transformArticle);
+        if (transformed.length > 0) {
+          setArticles(prev => [...prev, ...transformed]);
+          setVisibleCount(prev => prev + 10);
+          setCurrentPage(nextPage);
+          if (response.data.total_pages && nextPage >= response.data.total_pages) {
+            setHasMore(false);
+          }
+        } else {
+          setHasMore(false);
+        }
+      } else {
+        setHasMore(false);
+      }
+    } catch (e) {
+      console.error("Failed to load more articles:", e);
       setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -807,10 +837,17 @@ export default function BlogView({
           <div className="text-center pt-4">
             <button
               onClick={handleLoadMore}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-800 hover:border-slate-700 px-6 py-2.5 text-xs text-slate-400 hover:text-white font-mono transition-colors cursor-pointer"
+              disabled={isLoadingMore}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-800 hover:border-slate-700 px-6 py-2.5 text-xs text-slate-400 hover:text-white font-mono transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {t.blog.loadMore}
-              <ChevronRight className="w-3 h-3" />
+              {isLoadingMore ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <>
+                  {t.blog.loadMore}
+                  <ChevronRight className="w-3 h-3" />
+                </>
+              )}
             </button>
           </div>
         )}

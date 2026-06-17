@@ -108,6 +108,9 @@ export default function App() {
 
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [prototypeMode, setPrototypeMode] = useState<boolean>(false);
+  // 文章分页元信息
+  const [totalArticles, setTotalArticles] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
 
   // Page-specific loading flags
   const [articlesLoaded, setArticlesLoaded] = useState(false);
@@ -120,10 +123,15 @@ export default function App() {
     if ((currentPath === "blog" || currentPath === "blog-detail" || currentPath === "blog-compose" || currentPath === "profile") && !articlesLoaded) {
       const loadArticles = async () => {
         try {
-          const response = await articleApi.getArticles({ page_size: 50 });
+          const response = await articleApi.getArticles({ page_size: 10 });
           if (response.success && response.data) {
             const transformed = response.data.articles.map(transformArticle);
             setArticles(transformed);
+            // 保存后端分页元信息供加载更多使用
+            if (response.data.total !== undefined) {
+              setTotalArticles(response.data.total);
+              setTotalPages(response.data.total_pages);
+            }
           }
         } catch (e) {
           console.error("Failed to load articles:", e);
@@ -139,6 +147,25 @@ export default function App() {
   useEffect(() => {
     const token = localStorage.getItem('blog_access_token');
     if (!token) return;
+
+    // Load notifications whenever logged in (needed for header badge)
+    // 只在 notificationsLoaded 为 false 时加载一次
+    if (!notificationsLoaded) {
+      const loadNotifications = async () => {
+        try {
+          const response = await notificationApi.getNotifications();
+          if (response.success && response.data) {
+            const transformed = response.data.notifications.map(transformNotification);
+            setNotifications(transformed);
+          }
+        } catch (e) {
+          console.error("Failed to load notifications:", e);
+        } finally {
+          setNotificationsLoaded(true);
+        }
+      };
+      loadNotifications();
+    }
 
     // Load profile on first auth-page visit
     if ((currentPath === "profile" || currentPath === "settings" || currentPath === "notifications") && !profileLoaded) {
@@ -176,24 +203,6 @@ export default function App() {
         }
       };
       loadNotes();
-    }
-
-    // Load notifications whenever logged in (needed for header badge)
-    if (!notificationsLoaded) {
-      const loadNotifications = async () => {
-        try {
-          const response = await notificationApi.getNotifications();
-          if (response.success && response.data) {
-            const transformed = response.data.notifications.map(transformNotification);
-            setNotifications(transformed);
-          }
-        } catch (e) {
-          console.error("Failed to load notifications:", e);
-        } finally {
-          setNotificationsLoaded(true);
-        }
-      };
-      loadNotifications();
     }
 
     // Load settings only on settings page
@@ -254,6 +263,8 @@ export default function App() {
     setNotesLoaded(false);
     setNotificationsLoaded(false);
     setProfileLoaded(false);
+    setTotalArticles(0);
+    setTotalPages(0);
   };
 
   // Article handlers
