@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { BlogArticle, BlogComment, ActivePath, SystemSettings, UserProfile } from "../../types";
 import { Heart, MessageSquare, ArrowLeft, Send, Sparkles, Plus, CheckCircle, ChevronRight, Share2, Loader2 } from "lucide-react";
@@ -6,6 +6,12 @@ import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
 import { articleApi } from "../../api";
 import { transformArticle } from "../../dataTransform";
+import {
+  clearArticleReturnState,
+  readArticleReturnState,
+  restoreArticleAnchor,
+  saveArticleReturnState
+} from "../../navigationState";
 
 interface BlogViewProps {
   articles: BlogArticle[];
@@ -85,6 +91,7 @@ export default function BlogView({
   const [currentPage, setCurrentPage] = useState(1);
   const [detailLoaded, setDetailLoaded] = useState(false);
   const [loginToast, setLoginToast] = useState<string | null>(null);
+  const restoredBlogReturnRef = useRef(false);
 
   // 未登录时跳转登录页（带提示）
   const requireLogin = (message: string) => {
@@ -96,35 +103,54 @@ export default function BlogView({
     }, 2000);
   };
 
-  // 进入详情页前保存滚动位置
-  const saveScrollPosition = () => {
-    sessionStorage.setItem('blog_scroll_y', window.scrollY.toString());
+  // 进入详情页前保存列表上下文，直接返回时恢复当前文章所在区域
+  const saveBlogReturnState = (articleId: string) => {
+    saveArticleReturnState({
+      source: "blog",
+      articleId,
+      visibleCount,
+      currentPage,
+      hasMore,
+      scrollY: window.scrollY,
+      createdAt: Date.now(),
+    });
+    sessionStorage.setItem('detail_return_to', '/blog');
   };
 
-  // 返回列表页后恢复滚动位置
+  // 返回列表页后只恢复“从详情直接返回”的上下文
   useEffect(() => {
     if (currentPath === "blog") {
-      // 进入博客列表页时重置分页状态
+      setIsLoadingMore(false);
+
+      const returnState = readArticleReturnState();
+      if (returnState?.source === "blog") {
+        const articleIndex = articles.findIndex((article) => article.id === returnState.articleId);
+        const nextVisibleCount = Math.max(
+          10,
+          returnState.visibleCount,
+          articleIndex >= 0 ? articleIndex + 1 : 0
+        );
+
+        setVisibleCount(nextVisibleCount);
+        setCurrentPage(Math.max(returnState.currentPage, Math.ceil(nextVisibleCount / 10)));
+        setHasMore(returnState.hasMore);
+        restoredBlogReturnRef.current = true;
+        clearArticleReturnState();
+
+        return restoreArticleAnchor(
+          `blog-article-card-${returnState.articleId}`,
+          returnState.scrollY
+        );
+      }
+
+      if (restoredBlogReturnRef.current) {
+        restoredBlogReturnRef.current = false;
+        return;
+      }
+
       setVisibleCount(10);
       setHasMore(true);
       setCurrentPage(1);
-      setIsLoadingMore(false);
-
-      const savedY = sessionStorage.getItem('blog_scroll_y');
-      if (savedY) {
-        // 延迟恢复，等 lazy 组件和图片加载完成
-        const restore = () => {
-          requestAnimationFrame(() => {
-            window.scrollTo(0, parseInt(savedY, 10));
-          });
-        };
-        // 多次尝试恢复，防止图片加载导致高度变化
-        restore();
-        const timer = setTimeout(restore, 300);
-        // 恢复后清除，下次进入详情再重新记录
-        sessionStorage.removeItem('blog_scroll_y');
-        return () => clearTimeout(timer);
-      }
     }
   }, [currentPath]);
 
@@ -784,8 +810,9 @@ export default function BlogView({
           {articles.slice(0, visibleCount).map((art) => (
             <div
               key={art.id}
+              id={`blog-article-card-${art.id}`}
               onClick={() => {
-                saveScrollPosition();
+                saveBlogReturnState(art.id);
                 setSelectedArticleId(art.id);
                 navigate(`/blog/${art.id}`);
               }}

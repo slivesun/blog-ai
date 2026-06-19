@@ -9,6 +9,12 @@ import { UserProfile, BlogArticle, ActivePath, SystemSettings } from "../../type
 import { useLanguage } from "../../context/LanguageContext";
 import { useToast } from "../../context/ToastContext";
 import { Edit3, Check, Github, Mail, FileText, Bookmark, Trash2, Globe, Eye, EyeOff, BookOpen, LogOut, Loader2, AlertCircle, X } from "lucide-react";
+import {
+  clearArticleReturnState,
+  readArticleReturnState,
+  restoreArticleAnchor,
+  saveArticleReturnState
+} from "../../navigationState";
 
 interface ProfileProps {
   profile: UserProfile;
@@ -59,6 +65,17 @@ export default function ProfileView({
 
   const [activeTab, setActiveTab] = useState<"published" | "drafts">("published");
 
+  const saveProfileReturnState = (articleId: string) => {
+    saveArticleReturnState({
+      source: "profile",
+      articleId,
+      activeTab: "published",
+      scrollY: window.scrollY,
+      createdAt: Date.now(),
+    });
+    sessionStorage.setItem('detail_return_to', '/profile');
+  };
+
   // 从导航状态读取 tab
   useEffect(() => {
     const state = location.state as { tab?: string } | null;
@@ -67,6 +84,22 @@ export default function ProfileView({
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  // 从文章详情直接返回个人中心时，把原来的文章行恢复到视野内
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const returnState = readArticleReturnState();
+    if (returnState?.source !== "profile") return;
+
+    setActiveTab(returnState.activeTab);
+    clearArticleReturnState();
+
+    return restoreArticleAnchor(
+      `profile-article-row-${returnState.articleId}`,
+      returnState.scrollY
+    );
+  }, [isLoggedIn]);
 
   // Auth states
   const [showPassword, setShowPassword] = useState(false);
@@ -915,13 +948,14 @@ export default function ProfileView({
             userPublishedArticles.map((art) => (
               <div
                 key={art.id}
+                id={`profile-article-row-${art.id}`}
                 className={`mt-2 rounded-xl border border-slate-800 bg-slate-900/10 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 transition-colors ${themeBorderHover[settings.themeAccent]}`}
               >
                 <div
                   className="min-w-0 cursor-pointer text-left flex-1"
                   onClick={() => {
+                    saveProfileReturnState(art.id);
                     setSelectedArticleId(art.id);
-                    sessionStorage.setItem('detail_return_to', '/profile');
                     navigate(`/blog/${art.id}`);
                   }}
                 >
@@ -937,8 +971,8 @@ export default function ProfileView({
                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                   <button
                     onClick={() => {
+                      saveProfileReturnState(art.id);
                       setSelectedArticleId(art.id);
-                      sessionStorage.setItem('detail_return_to', '/profile');
                       navigate(`/blog/${art.id}`);
                     }}
                     className={`w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white bg-slate-950 rounded-lg border border-slate-800 cursor-pointer transition-colors ${themeBorderHover[settings.themeAccent]}`}

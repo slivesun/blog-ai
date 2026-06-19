@@ -15,6 +15,7 @@ import { articleApi, noteApi, notificationApi, profileApi, authApi, commentApi }
 import { transformArticle, transformNote, transformNotification, transformProfile, transformSettings, transformComment } from "./dataTransform";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import { clearArticleReturnState, readArticleReturnState } from "./navigationState";
 
 // Lazy load pages for code splitting
 const HomeView = lazy(() => import("./pages/home"));
@@ -56,6 +57,19 @@ export default function App() {
 
   const currentPath = getCurrentPath();
 
+  useEffect(() => {
+    const returnState = readArticleReturnState();
+    if (!returnState || currentPath === "blog-detail") return;
+
+    const isExpectedReturn =
+      (returnState.source === "blog" && currentPath === "blog") ||
+      (returnState.source === "profile" && currentPath === "profile");
+
+    if (!isExpectedReturn) {
+      clearArticleReturnState();
+    }
+  }, [currentPath]);
+
   const setPath = useCallback((path: ActivePath) => {
     const routeMap: Record<ActivePath, string> = {
       "home": "/",
@@ -84,6 +98,7 @@ export default function App() {
   // 监听 401 登出事件
   useEffect(() => {
     const handleLogout = () => {
+      clearArticleReturnState();
       setIsLoggedIn(false);
       setProfile(INITIAL_PROFILE);
       localStorage.removeItem("portalcore_profile");
@@ -243,6 +258,7 @@ export default function App() {
 
   // Reset defaults
   const handleResetDefaults = () => {
+    clearArticleReturnState();
     localStorage.clear();
     localStorage.removeItem('blog_access_token');
     setIsLoggedIn(false);
@@ -440,6 +456,7 @@ export default function App() {
 
   const handleLogout = async () => {
     await authApi.logout();
+    clearArticleReturnState();
     setIsLoggedIn(false);
     setProfile(INITIAL_PROFILE);
     setNotes([]);
